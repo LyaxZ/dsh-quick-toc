@@ -17,7 +17,13 @@
 
 ## 安装
 
-通过 DSH CLI 安装（仓库路径替换为实际值）：
+通过 DSH CLI 安装（已发布 npm，只要名字）：
+
+```
+dsh plugin --profile web add dsh-quick-toc
+```
+
+或从 GitHub 安装：
 
 ```
 dsh plugin --profile web add github:LyaxZ/dsh-quick-toc

@@ -17,7 +17,13 @@ A quick conversation TOC plugin for [DeepSeek Harness](https://github.com/deepse
 
 ## Install
 
-With the DSH CLI:
+With the DSH CLI (published on npm — name only):
+
+```
+dsh plugin --profile web add dsh-quick-toc
+```
+
+or from GitHub:
 
 ```
 dsh plugin --profile web add github:LyaxZ/dsh-quick-toc
