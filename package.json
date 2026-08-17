@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "dsh-quick-toc",
   "version": "0.1.0",
   "description": "Quick conversation TOC for DeepSeek Harness: markdown heading outline grouped by turn, with auto-follow highlight and smooth jump navigation",
@@ -39,6 +39,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/LyaxZ/dsh-quick-toc.git"
+    "url": "git+https://github.com/LyaxZ/dsh-quick-toc.git"
   }
 }
