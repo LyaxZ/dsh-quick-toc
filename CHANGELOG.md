@@ -12,7 +12,7 @@ All notable changes to **dsh-quick-toc** are documented here.
 - Scrollbar follows the dock side (left when docked left, right when docked right)
 - Paged rendering: latest groups first; scrolling the outline to the top loads older groups
 - Auto "load older": when the outline reaches the top with everything loaded, it clicks the conversation's own load-more button
-- Collapsible groups: click a group header to fold/unfold its headings; clicking the header time jumps to that turn's start
+- Header time jump: clicking a group's time label jumps to that turn's start
 - Markdown-aware titles: `**bold**`, `*italic*`, `` `code` ``, `[links](url)`, `~~strike~~` stripped from heading text
 - Persisted panel state (dock side, position, size) with automatic migration from older key names
 - Auto-hides when the conversation has no headings; light/dark theme support
