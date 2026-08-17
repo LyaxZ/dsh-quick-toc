@@ -1,0 +1,4 @@
+# dsh-quick-toc bundle patch: one loader row.
+- insert:
+    - id: quick-toc
+      name: dsh-quick-toc
