@@ -19,14 +19,19 @@ jobs:
           node-version: 20
 
       - name: Pack tarball
-        run: echo "ASSET=$(npm pack --silent)" >> "$GITHUB_ENV"
+        run: |
+          ASSET=$(npm pack --silent)
+          echo "ASSET=$ASSET" >> "$GITHUB_ENV"
+          # stable name so /releases/latest/download/dsh-quick-toc.tgz always works
+          cp "$ASSET" dsh-quick-toc.tgz
+          echo "STABLE=dsh-quick-toc.tgz" >> "$GITHUB_ENV"
 
-      - name: Create or update release with tarball
+      - name: Create or update release with tarballs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" "$ASSET" --clobber
+            gh release upload "$GITHUB_REF_NAME" "$ASSET" "$STABLE" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" "$ASSET" --generate-notes
+            gh release create "$GITHUB_REF_NAME" "$ASSET" "$STABLE" --generate-notes
           fi
