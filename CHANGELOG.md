@@ -2,6 +2,24 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
+## [0.2.0] - 2026-08-19
+
+### Added
+- Keyword search: header magnifier button opens a search box; Enter cycles through matches (n/N counter); Escape or the magnifier toggles it closed
+- Search scope toggle: 标题 (heading titles only) or 全文 (also user messages and AI reply texts), with cross-faded labels and an animated slide-in/out search bar
+- Matched keywords are highlighted in the conversation; the current match gets a distinct highlight and is scrolled to the upper-middle of the viewport
+- Every occurrence counts toward n/N (multiple hits in one message = multiple matches)
+- Heading-less turns get a standalone time entry; all group headers show the turn's first-line preview next to the time (click to jump)
+
+### Changed
+- Panel collapse animation unified for both docks: clip-path hides the panel at the sidebar/screen edge (shadow removed to avoid clipping artifacts)
+- Inactive outline groups dimmed to 0.6 opacity
+
+## [0.1.1] - 2026-08-17
+
+### Changed
+- Release workflow also uploads a stable-named tarball (`dsh-quick-toc.tgz`) so `/releases/latest/download/` always resolves to the newest release
+
 ## [0.1.0] - 2026-08-17
 
 ### Added
