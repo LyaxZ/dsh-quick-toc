@@ -2,7 +2,7 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
-## [0.2.1] - 2026-08-19
+## [0.2.2] - 2026-08-24
 
 ### Added
 - Keyword search: header magnifier button opens a search box; Enter cycles through matches (n/N counter); Escape or the magnifier toggles it closed
