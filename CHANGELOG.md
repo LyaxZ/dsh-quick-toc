@@ -2,17 +2,13 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
-## [0.2.1] - 2026-08-19
-
-### Added
-- Search scope toggle: 标题 (heading titles only) or 全文 (also user messages and AI reply texts)
-- In-chat match highlighting: matched keywords are highlighted in the conversation; the current match gets a distinct highlight and is scrolled to the upper-middle of the viewport
-- Every occurrence counts toward n/N (multiple hits in one message = multiple matches)
-
 ## [0.2.0] - 2026-08-19
 
 ### Added
 - Keyword search: header magnifier button opens a search box; Enter cycles through matches (n/N counter); Escape or the magnifier toggles it closed
+- Search scope toggle: 标题 (heading titles only) or 全文 (also user messages and AI reply texts)
+- In-chat match highlighting: matched keywords are highlighted in the conversation; the current match gets a distinct highlight and is scrolled to the upper-middle of the viewport
+- Every occurrence counts toward n/N (multiple hits in one message = multiple matches)
 - Heading-less turns get a standalone time entry; all group headers show the turn's first-line preview next to the time (click to jump)
 
 ### Changed
