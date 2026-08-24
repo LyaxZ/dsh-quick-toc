@@ -1,6 +1,6 @@
 {
   "name": "dsh-quick-toc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Quick conversation TOC for DeepSeek Harness: markdown heading outline grouped by turn, with auto-follow highlight and smooth jump navigation",
   "type": "module",
   "main": "lib/index.js",
