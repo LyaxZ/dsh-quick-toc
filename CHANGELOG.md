@@ -1,78 +1,78 @@
-# Changelog
+# 更新日志
 
-All notable changes to **dsh-quick-toc** are documented here.
+**dsh-quick-toc** 的重要变更都记录在这里。英文版见 [CHANGELOG.en.md](CHANGELOG.en.md)。
 
 ## [0.3.3] - 2026-09-10
 
-### Added
-- The panel and its collapsed edge handle fade out while the center column shows another view (trajectory, context, plugin views) and fade back in on the chat view. The check polls lightly (120 ms) and falls back to visible whenever the active view cannot be determined.
+### 新增
+- 中间列切到其他视图（轨迹、上下文、插件视图）时，大纲面板与收起后的边缘把手会渐隐，切回对话视图时渐显。检测为轻量轮询（120ms）；无法判断当前视图时按"可见"处理。
 
-### Changed
-- Compatibility is declared for DSH `0.1.5-rc.1` only (`engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies`), which is the version this plugin is verified against.
-- READMEs updated: the feature list and the usage section now cover search, search-scope switching, in-chat highlighting and turn jumping, and the compatibility table lists the supported DSH version of the last two releases.
-- GitHub releases now carry a description taken from the matching CHANGELOG section.
+### 变更
+- 兼容性只声明 DSH `0.1.5-rc.1`（`engines.dsh`、`dsh.compatibility.dshReleases` 与 `peerDependencies`），即本插件验证过的版本。
+- README 更新：功能列表与「使用」章节补齐搜索、搜索范围切换、对话内高亮与回合跳转；兼容表列出最近两个版本各自支持的 DSH 版本。
+- GitHub Release 的描述默认取中文 CHANGELOG 段落，英文段落折叠在其下方可展开；CHANGELOG 拆分为 `CHANGELOG.md`（中文，默认）与 `CHANGELOG.en.md`（英文）。
 
 ## [0.3.2] - 2026-09-08
 
-### Changed
-- Documentation pass: the compatibility matrix and feature list in the READMEs are refreshed, and the npm package description now mentions keyword search and in-chat highlighting.
+### 变更
+- 文档整理：README 的兼容表与功能列表更新，npm 包描述补充了关键字搜索与对话内高亮。
 
 ## [0.3.1] - 2026-09-08
 
-### Fixed
-- Panel and collapsed edge handle no longer float above DSH modals: the base z-index is now 500 (above app popovers at z 100 and the transcript width handles at z 8, but below DSH's modal layer at z 1000), so opening Settings covers the outline instead of the outline sitting on top of it.
-- Circular controls are true circles again on DSH 0.1.5-rc.1: the theme applies `corner-shape: superellipse(1.5)` to every element, which turned `border-radius: 50%` into a squircle. The icon buttons, search-scope toggle, top drag bar and edge handle now declare `corner-shape: round`.
+### 修复
+- 面板与收起把手不再浮在 DSH 弹层之上：基础 z-index 改为 500（高于应用弹出层 z100 与对话宽度手柄 z8，低于 DSH 弹层 z1000），打开设置时设置面板会盖住大纲。
+- 圆形控件在 DSH 0.1.5-rc.1 上恢复为正圆：主题对所有元素应用了 `corner-shape: superellipse(1.5)`，会把 `border-radius: 50%` 变成方圆角；图标按钮、搜索范围切换、顶部拖条与边缘把手现声明 `corner-shape: round`。
 
-### Changed
-- Compatibility declaration also lists DSH `0.1.5-rc.1` (verified compatible; `engines.dsh` stays `>=0.1.2-rc.1`).
+### 变更
+- 兼容声明加入 DSH `0.1.5-rc.1`（当时 `engines.dsh` 仍为 `>=0.1.2-rc.1`）。
 
 ## [0.3.0] - 2026-08-24
 
-### Fixed
-- **DSH 0.1.2-rc.1 compatibility**: the removed `@deepseek-ai/dsh-client-runtime` package no longer breaks plugin loading (externals drift). Runtime hooks now arrive as session-scope slot props.
-- Conversation data access moved from `useSession(s => s.chat.*)` to the session-scope `useChat` hook (`ChatSnapshot.order` + `nodes` map, contributed by `dsh-client-ui-chat`). Node shape unchanged (`kind: user/assistant-step`, `location.turn`, `data.blocks`), so grouping / search / highlight / jump logic is untouched.
-- Panel mount moved into the session-scoped `conversation.input.overlay` slot. In 0.1.2-rc.1 session-scoped hooks only reach a declared *session* slot; a frame-floating `shell.overlay` occupant's `SessionProvider` binds to the root binding (no session id) and rendered the panel slot empty. The panel still draws its own fixed, frame-floating dock (position: fixed), so the overlay seat is only the hook source.
+### 修复
+- 适配当时的目标版本 DSH 0.1.2-rc.1：已被移除的 `@deepseek-ai/dsh-client-runtime` 不再导致插件加载失败（externals drift），运行时 hook 改为由会话作用域槽位的 props 注入。
+- 对话数据访问由 `useSession(s => s.chat.*)` 改为会话作用域的 `useChat`（`ChatSnapshot.order` + `nodes`，由 `dsh-client-ui-chat` 贡献）；节点形状未变（`kind: user/assistant-step`、`location.turn`、`data.blocks`），因此分组、搜索、高亮与跳转逻辑未受影响。
+- 面板挂载改到会话作用域的 `conversation.input.overlay` 槽：该版本中会话级 hook 只到达已声明的会话槽，而 root 作用域 `shell.overlay` 里的 `SessionProvider` 绑定的是无 sessionId 的 root binding，导致子槽始终空渲染。面板本体仍以 `position: fixed` 自绘浮层，挂载槽只作为 hook 来源。
 
-### Changed
-- `dsh.client.inject` now lists `dsh-client-ui-chat` / `dsh-client-ui-conversation` / `dsh-client-ui-layout` instead of the removed runtime package.
-- Dropped the unused `sessions` service from the client inject list.
+### 变更
+- `dsh.client.inject` 改为列出 `dsh-client-ui-chat` / `dsh-client-ui-conversation` / `dsh-client-ui-layout`，替代已移除的运行时包。
+- 从客户端 inject 列表中移除未使用的 `sessions` 服务。
 
-### Added
-- Version guard: `dsh.compatibility.dshReleases` declares `0.1.2-rc.1: compatible` and `engines.dsh: ">=0.1.2-rc.1"` (dshmarket install-time host-compat preflight); peerDependencies pin `dsh-client-ui-chat` / `dsh-client-ui-conversation` `>=0.1.2-rc.1`. The panel degrades gracefully with a console warning when the `chat` hook is unavailable (older hosts).
+### 新增
+- 版本守卫：`dsh.compatibility.dshReleases` 与 `engines.dsh` 声明（供 dshmarket 安装时做宿主兼容预检），并以 peerDependencies 约束相关 DSH 包版本；`chat` hook 不可用时，面板以控制台警告优雅降级。
 
 ## [0.2.2] - 2026-08-24
 
-### Added
-- Keyword search: header magnifier button opens a search box; Enter cycles through matches (n/N counter); Escape or the magnifier toggles it closed
-- Search scope toggle: 标题 (heading titles only) or 全文 (also user messages and AI reply texts)
-- In-chat match highlighting: matched keywords are highlighted in the conversation; the current match gets a distinct highlight and is scrolled to the upper-middle of the viewport
-- Every occurrence counts toward n/N (multiple hits in one message = multiple matches)
-- Heading-less turns get a standalone time entry; all group headers show the turn's first-line preview next to the time (click to jump)
+### 新增
+- 关键字搜索：标题栏放大镜打开搜索框，回车逐处跳转（`n/N` 计数），Esc 或再次点击放大镜关闭
+- 搜索范围切换：仅标题，或同时搜索用户消息与 AI 回复正文
+- 对话内高亮：命中的关键字在对话中高亮，当前命中单独标亮并滚动到视口中上部
+- 同一条消息内的多次命中都计入 `n/N`
+- 无标题的回合也有独立的时间条目；所有组头在时间旁显示该回合首行预览（点击跳转）
 
-### Changed
-- Panel collapse animation unified for both docks: clip-path hides the panel at the sidebar/screen edge (shadow removed to avoid clipping artifacts)
-- Inactive outline groups dimmed to 0.6 opacity
+### 变更
+- 两种停靠的面板收起动画统一：由 clip-path 在侧栏/屏幕边缘裁切（移除阴影，避免裁切残影）
+- 非激活的大纲组降到 0.6 不透明度
 
 ## [0.1.1] - 2026-08-17
 
-### Changed
-- Release workflow also uploads a stable-named tarball (`dsh-quick-toc.tgz`) so `/releases/latest/download/` always resolves to the newest release
+### 变更
+- 发布流程额外上传稳定命名的 tarball（`dsh-quick-toc.tgz`），使 `/releases/latest/download/` 始终解析到最新版本
 
 ## [0.1.0] - 2026-08-17
 
-### Added
-- Turn-grouped outline: each user message + its AI replies form one group, with the group's end time as the header
-- Auto-follow highlight: turns visible in the conversation viewport light up in the outline (multiple at once); the outline auto-loads and scrolls to keep them visible
-- Smooth jump: clicking a heading glides to the exact heading position in the conversation (with a small top offset)
-- Dock left/right with a draggable top bar, resizable from the edges/corner, collapsible into a draggable edge handle
-- Scrollbar follows the dock side (left when docked left, right when docked right)
-- Paged rendering: latest groups first; scrolling the outline to the top loads older groups
-- Auto "load older": when the outline reaches the top with everything loaded, it clicks the conversation's own load-more button
-- Header time jump: clicking a group's time label jumps to that turn's start
-- Markdown-aware titles: `**bold**`, `*italic*`, `` `code` ``, `[links](url)`, `~~strike~~` stripped from heading text
-- Persisted panel state (dock side, position, size) with automatic migration from older key names
-- Auto-hides when the conversation has no headings; light/dark theme support
+### 新增
+- 按回合分组的大纲：每条用户消息与其后续 AI 回复为一组，组头显示该组的结束时间
+- 自动跟随高亮：对话视口内可见的回合在大纲中点亮（可同时多组）；大纲自动加载并滚动，使其保持可见
+- 平滑跳转：点击标题平滑滚动到对话中该标题的位置（带少量顶部偏移）
+- 左右停靠（拖顶部横条移动）、从边缘/角部调整大小、收起为边缘把手（点击展开）
+- 滚动条随停靠方向（停靠左侧时在左，停靠右侧时在右）
+- 分页渲染：默认显示最新的若干组；在大纲中滚到顶部加载更早的组
+- 自动「加载更早」：大纲到达顶部且已全部加载时，会点击对话自身的「加载更多」按钮
+- 组头时间跳转：点击组的时间标签跳到该回合开头
+- Markdown 感知标题：剥离 `**加粗**`、`*斜体*`、`` `代码` ``、`[链接](url)`、`~~删除线~~`
+- 面板状态持久化（停靠边、位置、尺寸），并从旧键名自动迁移
+- 对话无标题时自动隐藏；支持亮/暗主题
 
-### Published
-- npm: `dsh-quick-toc@0.1.0`
-- GitHub: `LyaxZ/dsh-quick-toc` with auto-release workflow (tag push -> npm pack -> release asset)
+### 发布
+- npm：`dsh-quick-toc@0.1.0`
+- GitHub：`LyaxZ/dsh-quick-toc`，带自动发布流程（推送标签 → npm pack → release 资产）
