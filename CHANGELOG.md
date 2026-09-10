@@ -2,6 +2,15 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
+## [0.3.1] - 2026-09-08
+
+### Fixed
+- Panel and collapsed edge handle no longer float above DSH modals: the base z-index is now 500 (above app popovers at z 100 and the transcript width handles at z 8, but below DSH's modal layer at z 1000), so opening Settings covers the outline instead of the outline sitting on top of it.
+- Circular controls are true circles again on DSH 0.1.5-rc.1: the theme applies `corner-shape: superellipse(1.5)` to every element, which turned `border-radius: 50%` into a squircle. The icon buttons, search-scope toggle, top drag bar and edge handle now declare `corner-shape: round`.
+
+### Changed
+- Compatibility declaration also lists DSH `0.1.5-rc.1` (verified compatible; `engines.dsh` stays `>=0.1.2-rc.1`).
+
 ## [0.3.0] - 2026-08-24
 
 ### Fixed
