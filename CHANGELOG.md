@@ -9,7 +9,7 @@ All notable changes to **dsh-quick-toc** are documented here.
 
 ### Changed
 - Compatibility is declared for DSH `0.1.5-rc.1` only (`engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies`), which is the version this plugin is verified against.
-- READMEs updated: the feature list and the usage section now cover search, search-scope switching, in-chat highlighting and turn jumping.
+- READMEs updated: the feature list and the usage section now cover search, search-scope switching, in-chat highlighting and turn jumping, and the compatibility table lists the supported DSH version of the last two releases.
 - GitHub releases now carry a description taken from the matching CHANGELOG section.
 
 ## [0.3.2] - 2026-09-08

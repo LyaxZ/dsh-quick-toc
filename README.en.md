@@ -20,11 +20,12 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 
 ## Compatibility
 
-| Plugin | Verified DSH version |
+| Plugin | Supported DSH |
 | --- | --- |
-| **0.3.3** (latest) | **0.1.5-rc.1** |
+| **0.3.3** (latest) | 0.1.5-rc.1 |
+| 0.3.2 | ≥ 0.1.2-rc.1 |
 
-This plugin has only been verified against **DSH 0.1.5-rc.1**, so that is the only version it declares compatibility with; other DSH versions are unverified and therefore not claimed. On install or update, the DSH market pre-flights host compatibility from `engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies` in `package.json`.
+The latest version has only been verified against **DSH 0.1.5-rc.1**, so that is the only version it declares; older DSH versions are unverified and therefore not claimed. On an older DSH, the newest usable plugin version is **0.3.2**. On install or update, the DSH market pre-flights host compatibility from `engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies` in `package.json`.
 
 ## Install
 

@@ -20,11 +20,12 @@
 
 ## 兼容性
 
-| 插件版本 | 已验证的 DSH 版本 |
+| 插件版本 | 支持的 DSH 版本 |
 | --- | --- |
-| **0.3.3**（最新） | **0.1.5-rc.1** |
+| **0.3.3**（最新） | 0.1.5-rc.1 |
+| 0.3.2 | ≥ 0.1.2-rc.1 |
 
-本插件目前只在 **DSH 0.1.5-rc.1** 上验证过，因此仅声明对该版本兼容；其他 DSH 版本未经验证，不作兼容声明。安装或更新时，DSH 市场会依据 `package.json` 中的 `engines.dsh`、`dsh.compatibility.dshReleases` 与 `peerDependencies` 做宿主兼容预检。
+最新版目前只在 **DSH 0.1.5-rc.1** 上验证过，因此仅声明该版本兼容；更早的 DSH 版本未经验证，不作声明。使用更早版本 DSH 时，可用的最新插件版本是 **0.3.2**。安装或更新时，DSH 市场会依据 `package.json` 中的 `engines.dsh`、`dsh.compatibility.dshReleases` 与 `peerDependencies` 做宿主兼容预检。
 
 ## 安装
 
