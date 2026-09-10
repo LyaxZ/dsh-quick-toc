@@ -1,7 +1,7 @@
 {
   "name": "dsh-quick-toc",
-  "version": "0.3.1",
-  "description": "Quick conversation TOC for DeepSeek Harness: markdown heading outline grouped by turn, with auto-follow highlight and smooth jump navigation",
+  "version": "0.3.2",
+  "description": "Conversation TOC for DeepSeek Harness (DSH): turn-grouped Markdown heading outline with keyword search (title/full-text scope), in-chat match highlighting, auto-follow and smooth jump navigation",
   "type": "module",
   "main": "lib/index.js",
   "files": [
@@ -9,6 +9,7 @@
     "cordis.patch.yml",
     "README.md",
     "README.en.md",
+    "CHANGELOG.md",
     "LICENSE"
   ],
   "engines": {

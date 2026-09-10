@@ -20,8 +20,9 @@ A quick conversation TOC plugin for [DeepSeek Harness](https://github.com/deepse
 
 | Plugin | DSH |
 | --- | --- |
-| **0.3.0** | **≥ 0.1.2-rc.1** (new slot architecture) |
-| 0.2.2 | DSH versions before 0.1.2-rc.1 |
+| **0.3.2** (latest) | **≥ 0.1.2-rc.1** (verified on 0.1.2-rc.1 / 0.1.5-rc.1) |
+| 0.3.0 – 0.3.1 | same |
+| 0.2.2 | DSH versions before 0.1.2-rc.1 (install as `dsh-quick-toc@legacy`) |
 
 0.3.0 re-targeted the host integration (new slot architecture + `useChat` session data) and **only supports DSH 0.1.2-rc.1 and above**; for older DSH builds install 0.2.2. On install/update the DSH market pre-flights host compatibility from `dsh.compatibility.dshReleases` and `peerDependencies` in package.json and warns on a mismatch.
 

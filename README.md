@@ -20,8 +20,9 @@
 
 | 插件版本 | DSH 版本 |
 | --- | --- |
-| **0.3.0** | **≥ 0.1.2-rc.1**（新 slot 架构） |
-| 0.2.2 | 0.1.2-rc.1 之前的旧版 DSH |
+| **0.3.2**（最新） | **≥ 0.1.2-rc.1**（已在 0.1.2-rc.1 / 0.1.5-rc.1 验证） |
+| 0.3.0 – 0.3.1 | 同上 |
+| 0.2.2 | 0.1.2-rc.1 之前的旧版 DSH（npm 上 `dsh-quick-toc@legacy`） |
 
 0.3.0 重写了与宿主的对接（新版 slot 架构 + `useChat` 会话数据），**只支持 DSH 0.1.2-rc.1 及以上**；旧版 DSH 请安装 0.2.2。安装/更新时 DSH 市场会根据 package.json 的 `dsh.compatibility.dshReleases` 与 `peerDependencies` 做 host 兼容预检，版本不符会给出提示。
 

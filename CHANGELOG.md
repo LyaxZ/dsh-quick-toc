@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
+## [0.3.2] - 2026-09-08
+
+### Changed
+- Documentation pass: the compatibility matrix and feature list in the READMEs are refreshed, and the npm package description now mentions keyword search and in-chat highlighting.
+
 ## [0.3.1] - 2026-09-08
 
 ### Fixed
