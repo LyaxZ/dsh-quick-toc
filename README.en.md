@@ -2,66 +2,67 @@
 
 > **English** | [中文](README.md)
 
-A quick conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): extracts Markdown headings (H1–H6) from AI replies into a navigable outline panel, grouped by conversation turn, with auto-follow highlighting, keyword search and in-chat match highlighting.
+A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline panel, grouped by conversation turn, with auto-follow highlighting, keyword search and in-chat match highlighting.
 
 ## Features
 
-- **Turn-grouped outline** — each user message + its AI replies form one group, with the group's end time as the header (plus the turn's first-line preview; click it to jump to the turn start)
-- **Keyword search** — a magnifier in the header opens the search box; Enter cycles matches (n/N counter), Esc closes; toggle between **title / full-text** scope
-- **In-chat highlighting** — matched keywords are highlighted in the conversation; the current match gets a distinct highlight and is scrolled to the upper-middle of the viewport; every occurrence counts toward n/N
-- **Auto-follow highlight** — as you scroll the conversation, the turns visible in the viewport light up in the outline (multiple at once); the outline auto-loads and scrolls to keep them visible
-- **Smooth jump** — click a heading to glide to the exact heading position in the conversation
-- **Dockable & resizable** — dock left or right (drag the top bar), resize from the edges/corner, collapse to a draggable edge handle; panel size/position remembered
-- **Paged rendering** — shows the latest groups first; scrolling to the top of the outline loads older ones
-- **Markdown-aware titles** — inline `**bold**`, *italic*, `` `code` ``, `[links](url)`, `~~strike~~` are stripped from heading text
-- Auto-hides when the conversation has no headings; works in light/dark themes; the inner-shadow card look adapts to the theme (white bevel in dark)
+- **Turn-grouped outline** — each user message plus its following AI replies form one group; the group header shows the turn's end time and a first-line preview, and clicking it jumps to the start of the turn
+- **Keyword search** — the magnifier in the panel header opens a search box; press **Enter** to jump to the next match (wrapping), **Esc** to close, with an `n/N` match counter
+- **Search scope toggle** — the **title / full-text** button in the search box switches between searching heading titles only and also searching user messages plus AI reply text
+- **In-chat highlighting** — matched keywords are highlighted in the conversation; the current match is highlighted distinctly and scrolled into the upper part of the viewport; every occurrence inside a message counts toward `n/N`
+- **Auto-follow highlighting** — while scrolling the conversation, the turns visible in the viewport light up in the outline (several at once) and the rest dim; the outline loads and scrolls so the group being read stays visible
+- **Jumping** — click a heading to jump to its position in the conversation, or click a group header's time/preview to jump to the start of that turn
+- **Dockable and resizable** — drag the top bar to move the panel, use ◀ / ▶ to dock it left or right, drag an edge or corner to resize, and collapse it into an edge handle (click it to expand); the panel's position and size are remembered
+- **Paging and loading older** — the most recent groups show first; scrolling up inside the outline loads older groups
+- **Markdown-aware titles** — inline markup in headings (`**bold**`, `*italic*`, `` `code` ``, `[links](url)`, `~~strike~~`) is stripped before display
+- **Chat view only** — when the center column switches to another view (trajectory, context, …), the panel and its edge handle fade out
+- The panel hides itself when the conversation has no headings; it adapts to the dark and light themes (the inner-shadow card follows the theme)
 
 ## Compatibility
 
-| Plugin | DSH |
+| Plugin | Verified DSH version |
 | --- | --- |
-| **0.3.2** (latest) | **≥ 0.1.2-rc.1** (verified on 0.1.2-rc.1 / 0.1.5-rc.1) |
-| 0.3.0 – 0.3.1 | same |
-| 0.2.2 | DSH versions before 0.1.2-rc.1 (install as `dsh-quick-toc@legacy`) |
+| **0.3.3** (latest) | **0.1.5-rc.1** |
 
-0.3.0 re-targeted the host integration (new slot architecture + `useChat` session data) and **only supports DSH 0.1.2-rc.1 and above**; for older DSH builds install 0.2.2. On install/update the DSH market pre-flights host compatibility from `dsh.compatibility.dshReleases` and `peerDependencies` in package.json and warns on a mismatch.
+This plugin has only been verified against **DSH 0.1.5-rc.1**, so that is the only version it declares compatibility with; other DSH versions are unverified and therefore not claimed. On install or update, the DSH market pre-flights host compatibility from `engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies` in `package.json`.
 
 ## Install
 
-With the DSH CLI (published on npm — name only):
+With the DSH CLI:
 
 ```
 dsh plugin --profile web add dsh-quick-toc
 ```
 
-or from GitHub:
+Or from GitHub:
 
 ```
 dsh plugin --profile web add github:LyaxZ/dsh-quick-toc
 ```
 
-or, for a local checkout:
+Or from a local folder:
 
 ```
-dsh plugin --profile web add <path-to-this-folder>
+dsh plugin --profile web add <path-to-the-plugin-folder>
 ```
 
-Restart DSH (double-click `restart-dsh.bat` on Windows) and open the Web UI. The outline is collapsed by default — click the small edge handle on the left side of the conversation to expand it.
+After installing, restart DSH and open the Web UI. The panel starts collapsed; click the edge handle next to the conversation to expand it.
 
 ## Usage
 
-- Click a heading in the outline to jump to that heading in the conversation
-- Drag the top bar to move the panel; use the **◀ / ▶** button to dock left/right
-- Drag the right edge (width), bottom edge (height) or the bottom-right corner (both) to resize
-- Scroll the outline to the top to load older groups
+- **Jumping**: click a heading in the outline to jump to its position; click a group header's time or first-line preview to jump to the start of that turn
+- **Search**: click the magnifier in the header to open the search box, type a keyword and press Enter to step through matches (`n/N` shows the current position and the total); press Esc or the magnifier again to close it; use the **title / full-text** button to change the search scope
+- **Moving and docking**: drag the top bar to move the panel; use ◀ / ▶ to switch between left and right docking
+- **Resizing**: drag the right edge for width, the bottom edge for height, or the bottom-right corner for both
+- **Loading older turns**: scroll up inside the outline to load older groups; when the conversation itself offers a "load older messages" button, the outline also triggers it on reaching the top
 
 ## Development
 
 - `lib/client.js` — all UI logic (browser side)
-- `lib/index.js` — host-side no-op entry (extend with a version gate if needed)
+- `lib/index.js` — host-side entry (empty; this plugin ships browser-side UI only)
 - `cordis.patch.yml` — loader patch (official DSH bundle format)
-- **Since 0.3.0 the plugin targets the new plugin model**: the panel registers into the session-scoped `conversation.input.overlay` slot (session hooks are contributed via `ctx.uiSession.provide`, `useChat` by ui-chat), and the panel body `createPortal`s to `document.body` as a fixed floating dock; data comes from `props.useChat` (`ChatSnapshot.order` + `nodes`; node shape: `kind: user/assistant-step`, `location.turn`, `data.blocks`)
-- Client changes need a DSH restart (boot rev is content-based)
+- The panel registers into the session-scoped `conversation.input.overlay` slot so it receives session-scoped hooks (`useChat`, `useSession`, `sessionId`, …), and renders itself through `createPortal` into `document.body` as a fixed floating dock; conversation data comes from `props.useChat` (`ChatSnapshot.order` and `nodes`; node shape: `kind: user/assistant-step`, `location.turn`, `data.blocks`)
+- Changes to `lib/client.js` take effect after restarting DSH
 
 ## License
 

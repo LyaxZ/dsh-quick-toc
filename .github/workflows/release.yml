@@ -26,12 +26,43 @@ jobs:
           cp "$ASSET" dsh-quick-toc.tgz
           echo "STABLE=dsh-quick-toc.tgz" >> "$GITHUB_ENV"
 
+      # The release body is the CHANGELOG section for this tag, so every release
+      # carries the same description as the package changelog.
+      - name: Extract release notes from CHANGELOG
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PAT="## [${VERSION}]"
+          awk -v pat="$PAT" '
+            index($0, pat) == 1 { found = 1; next }
+            found && index($0, "## [") == 1 { exit }
+            found { print }
+          ' CHANGELOG.md > NOTES.md
+          if [ -s NOTES.md ]; then
+            {
+              printf '**dsh-quick-toc %s**\n' "$VERSION"
+              cat NOTES.md
+            } > NOTES.full.md
+            echo "HAS_NOTES=1" >> "$GITHUB_ENV"
+          else
+            : > NOTES.full.md
+            echo "HAS_NOTES=" >> "$GITHUB_ENV"
+          fi
+
       - name: Create or update release with tarballs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "$ASSET" "$STABLE" --clobber
+            if [ -n "$HAS_NOTES" ]; then
+              gh release edit "$GITHUB_REF_NAME" --notes-file NOTES.full.md
+            fi
           else
-            gh release create "$GITHUB_REF_NAME" "$ASSET" "$STABLE" --generate-notes
+            if [ -n "$HAS_NOTES" ]; then
+              gh release create "$GITHUB_REF_NAME" "$ASSET" "$STABLE" \
+                --title "$GITHUB_REF_NAME" --notes-file NOTES.full.md
+            else
+              gh release create "$GITHUB_REF_NAME" "$ASSET" "$STABLE" \
+                --title "$GITHUB_REF_NAME" --generate-notes
+            fi
           fi

@@ -1,6 +1,6 @@
 {
   "name": "dsh-quick-toc",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Conversation TOC for DeepSeek Harness (DSH): turn-grouped Markdown heading outline with keyword search (title/full-text scope), in-chat match highlighting, auto-follow and smooth jump navigation",
   "type": "module",
   "main": "lib/index.js",
@@ -13,7 +13,7 @@
     "LICENSE"
   ],
   "engines": {
-    "dsh": ">=0.1.2-rc.1"
+    "dsh": ">=0.1.5-rc.1"
   },
   "exports": {
     ".": "./lib/index.js",
@@ -34,15 +34,14 @@
     },
     "compatibility": {
       "dshReleases": {
-        "0.1.2-rc.1": "compatible",
         "0.1.5-rc.1": "compatible"
       }
     }
   },
   "peerDependencies": {
     "react": "^18.2.0",
-    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.2-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.2-rc.1"
+    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.1",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.1"
   },
   "license": "MIT",
   "keywords": [

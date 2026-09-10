@@ -2,6 +2,16 @@
 
 All notable changes to **dsh-quick-toc** are documented here.
 
+## [0.3.3] - 2026-09-10
+
+### Added
+- The panel and its collapsed edge handle fade out while the center column shows another view (trajectory, context, plugin views) and fade back in on the chat view. The check polls lightly (120 ms) and falls back to visible whenever the active view cannot be determined.
+
+### Changed
+- Compatibility is declared for DSH `0.1.5-rc.1` only (`engines.dsh`, `dsh.compatibility.dshReleases` and `peerDependencies`), which is the version this plugin is verified against.
+- READMEs updated: the feature list and the usage section now cover search, search-scope switching, in-chat highlighting and turn jumping.
+- GitHub releases now carry a description taken from the matching CHANGELOG section.
+
 ## [0.3.2] - 2026-09-08
 
 ### Changed
