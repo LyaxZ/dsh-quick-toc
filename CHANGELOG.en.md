@@ -12,11 +12,14 @@ All notable changes to **dsh-quick-toc** are documented here. Chinese version: [
 
 ### Changed
 - **Performance**: heading parsing is cached per node, so streaming updates only reprocess what changed.
+- Turn headers now jump to the start of the model's reply.
 - Verified against DSH 0.1.5-rc.1 and 0.1.5-rc.2.
 
 ### Fixed
-- Fixed several search-highlight, row-click and breadcrumb jump issues.
-- Turn headers now jump to the start of the model's reply; `#` lines inside fenced code blocks are no longer treated as headings.
+- The outline did not jump to the newest turn when content first appeared.
+- Dragging the top bar did not persist the panel position (it jumped back after a reload).
+- When a keyword occurred several times in the same text, only the first one was highlighted.
+- `#` lines inside fenced code blocks were treated as headings and made the real headings after them jump to the wrong place.
 
 ## [0.3.3] - 2026-09-10
 
