@@ -13,6 +13,7 @@ All notable changes to **dsh-quick-toc** are documented here. Chinese version: [
 
 ### Changed
 - **Performance**: heading parsing and text extraction are now cached per node, so a streaming update only re-processes the node that changed instead of the whole history; the cache drops nodes that left the conversation, keeping it bounded.
+- The turn header (the time row) now jumps to the **start of that turn's model reply** (it used to jump to the user message).
 - **Compatibility**: verified against and declared for DSH **0.1.5-rc.1 and 0.1.5-rc.2** (`engines.dsh` keeps its floor of `>=0.1.5-rc.1`). The host interface is identical in both — the session-scoped slot `conversation.input.overlay`, the `useChat` hook from `dsh-client-ui-chat` and the client-module seed table were all checked against the installed bundles.
 - `countOccurrences` now guards an empty needle (an empty query made `indexOf` spin in place — an infinite loop; every current call site is guarded, so this is hardening).
 
@@ -21,6 +22,12 @@ All notable changes to **dsh-quick-toc** are documented here. Chinese version: [
 - Dragging the top bar to move the panel persisted the position from **before** the drag (the closure kept the value captured at pointer-down), so the panel jumped back to its old spot after a reload. It now stores the position the drag ended at.
 - When the same keyword occurred more than once inside one text node, the in-chat highlight wrapped only the FIRST occurrence there, so the later one was neither tinted nor eligible to be marked as the current hit — stepping to it found no current mark and degraded to a plain scroll with no distinct highlight. Every occurrence inside each text node is now wrapped in order, so the in-conversation hit order lines up with `n/N`.
 - `# comment` / `## example` lines inside a ``` fenced code block were treated as headings and leaked into the outline: they have no element to jump to, and they shifted the index of the real headings after them so those jumped to the wrong place. Heading parsing now skips fenced blocks (``` and ~~~, info strings, longer closing fences, up to 3 spaces of indentation).
+
+## [0.4.1] - 2026-09-12
+
+### Changed
+- **Heading levels are now a popup**: a round icon button in the header (three lines of decreasing width, hover feedback matching the magnifier) scales the H1–H6 picker out of the **button's center**, right-aligned with an outer shadow; closing shrinks it back into the button with a fade. The picker no longer occupies its own row, the chips are labelled H1–H6, and their selected tint matches the title / full-text toggle.
+- Removed the "you are here" breadcrumb row introduced in 0.4.0 (it felt unnecessary in use).
 
 ## [0.3.3] - 2026-09-10
 
