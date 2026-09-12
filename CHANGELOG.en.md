@@ -5,21 +5,22 @@ All notable changes to **dsh-quick-toc** are documented here. Chinese version: [
 ## [0.4.0] - 2026-09-11
 
 ### Added
-- **Search result list**: while searching, the outline becomes a result list; click any row to locate and highlight that hit. Title / full-text scopes, `n/N` Enter stepping.
-- **Sticky group headers**: the current turn's header stays pinned at the top of the panel.
-- **Position breadcrumb**: the top of the panel shows the section you are reading; click it to jump there.
-- **Heading level filter**: the `1`–`6` chips are independent switches for any combination; the row can be collapsed with the 层级 button in the header.
+- **Search result list**: while a query is present the outline becomes a result list — one row per match, showing the matched heading or message with the keyword highlighted, its heading path, the turn time and a repeat count (plus a context snippet in full-text scope). Rows are chronological with the **newest hit at the bottom**, a fresh search starts at the newest hit and you scroll up to reach earlier ones; **clicking a row** makes that hit current, i.e. the same path as Enter stepping — it highlights the keyword in the conversation and scrolls there. `n/N` Enter-stepping is kept.
+- **Sticky group headers**: while scrolling the outline, the header of the turn you are inside stays pinned to the top of the panel, flush against the toolbar above it.
+- **Collapsible level-filter row**: the **层级 (levels)** button at the left of the magnifier hides/shows the `1`–`6` row (the choice is remembered; the filter keeps applying while it is hidden).
+- **Position breadcrumb**: the top of the panel shows the path of the section you are reading; click it to jump there. The rule is "the deepest heading above the viewport's middle line" — the section that fills most of the screen — and since a jump also lands above that line, the breadcrumb still shows the same heading after you click it.
+- **Heading level filter**: the `1`–`6` chips at the top of the panel are independent switches, so any combination works (e.g. H1 and H3 with H2 hidden) and the choice is remembered; switching off the last remaining level restores all six.
 
 ### Changed
-- **Performance**: heading parsing is cached per node, so streaming updates only reprocess what changed.
-- Turn headers now jump to the start of the model's reply.
-- Verified against DSH 0.1.5-rc.1 and 0.1.5-rc.2.
+- **Performance**: heading parsing and text extraction are now cached per node, so a streaming update only re-processes the node that changed instead of the whole history; the cache drops nodes that left the conversation, keeping it bounded.
+- **Compatibility**: verified against and declared for DSH **0.1.5-rc.1 and 0.1.5-rc.2** (`engines.dsh` keeps its floor of `>=0.1.5-rc.1`). The host interface is identical in both — the session-scoped slot `conversation.input.overlay`, the `useChat` hook from `dsh-client-ui-chat` and the client-module seed table were all checked against the installed bundles.
+- `countOccurrences` now guards an empty needle (an empty query made `indexOf` spin in place — an infinite loop; every current call site is guarded, so this is hardening).
 
 ### Fixed
-- The outline did not jump to the newest turn when content first appeared.
-- Dragging the top bar did not persist the panel position (it jumped back after a reload).
-- When a keyword occurred several times in the same text, only the first one was highlighted.
-- `#` lines inside fenced code blocks were treated as headings and made the real headings after them jump to the wrong place.
+- The outline did not jump to the newest turn when content first appeared: that effect's dependency array was written above the `groups` declaration, so it always evaluated to `0` during render and the effect only ever ran on mount. The effect now sits below `groups` and depends on `groups.length`.
+- Dragging the top bar to move the panel persisted the position from **before** the drag (the closure kept the value captured at pointer-down), so the panel jumped back to its old spot after a reload. It now stores the position the drag ended at.
+- When the same keyword occurred more than once inside one text node, the in-chat highlight wrapped only the FIRST occurrence there, so the later one was neither tinted nor eligible to be marked as the current hit — stepping to it found no current mark and degraded to a plain scroll with no distinct highlight. Every occurrence inside each text node is now wrapped in order, so the in-conversation hit order lines up with `n/N`.
+- `# comment` / `## example` lines inside a ``` fenced code block were treated as headings and leaked into the outline: they have no element to jump to, and they shifted the index of the real headings after them so those jumped to the wrong place. Heading parsing now skips fenced blocks (``` and ~~~, info strings, longer closing fences, up to 3 spaces of indentation).
 
 ## [0.3.3] - 2026-09-10
 
