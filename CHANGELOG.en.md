@@ -2,6 +2,32 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.4.0] - 2026-09-11
+
+### Added
+- **Sticky group headers**: while scrolling the outline, the header of the turn you are inside stays pinned to the top of the panel, flush against the toolbar above it.
+- **Collapsible level-filter row**: the **层级 (levels)** button at the left of the magnifier hides/shows the `1`–`6` row (the choice is remembered; the filter keeps applying while it is hidden).
+- **Position breadcrumb**: the top of the panel shows the path of the section you are reading; click it to jump there. The rule is "the deepest heading above the viewport's middle line" — the section that fills most of the screen — and since a jump also lands above that line, the breadcrumb still shows the same heading after you click it.
+- **Heading level filter**: the `1`–`6` chips at the top of the panel are independent switches, so any combination works (e.g. H1 and H3 with H2 hidden) and the choice is remembered; switching off the last remaining level restores all six.
+- **Search result list**: while a query is present the outline becomes a result list — one row per match, showing the matched heading or message with the keyword highlighted, its heading path, the turn time and a repeat count (plus a context snippet in full-text scope). Rows are chronological with the **newest hit at the bottom**, a fresh search starts at the newest hit and you scroll up to reach earlier ones; **clicking a row** makes that hit current, i.e. the same path as Enter stepping — it highlights the keyword in the conversation and scrolls there. `n/N` Enter-stepping is kept.
+
+### Changed
+- **Compatibility**: verified against and declared for DSH **0.1.5-rc.1 and 0.1.5-rc.2** (`engines.dsh` keeps its floor of `>=0.1.5-rc.1`). The host interface is identical in both — the session-scoped slot `conversation.input.overlay`, the `useChat` hook from `dsh-client-ui-chat` and the client-module seed table were all checked against the installed bundles.
+- **Performance**: heading parsing and text extraction are now cached per node, so a streaming update only re-processes the node that changed instead of the whole history; the cache drops nodes that left the conversation, keeping it bounded.
+- `countOccurrences` now guards an empty needle (an empty query made `indexOf` spin in place — an infinite loop; every current call site is guarded, so this is hardening).
+
+### Fixed
+- The outline did not jump to the newest turn when content first appeared: that effect's dependency array was written above the `groups` declaration, so it always evaluated to `0` during render and the effect only ever ran on mount. The effect now sits below `groups` and depends on `groups.length`.
+- Result rows always reported a repeat count of 1 (the `×N` badge never appeared), which also made the "row holding the current match" highlight land on the next row when one heading matched twice. Each row now records its real occurrence count.
+- Dragging the top bar to move the panel persisted the position from **before** the drag (the closure kept the value captured at pointer-down), so the panel jumped back to its old spot after a reload. It now stores the position the drag ended at.
+- In full-text scope, clicking a row whose hit was in a message body only scrolled and never highlighted anything (the click used the jump-only path while highlighting only happened while Enter-stepping). Clicking a result row now shares the stepping path: highlight that hit, scroll to it, and update both `n/N` and the highlighted row.
+- When the same keyword occurred more than once inside one text node, the in-chat highlight wrapped only the FIRST occurrence there, so the later one was neither tinted nor eligible to be marked as the current hit — stepping to it found no current mark and degraded to a plain scroll with no distinct highlight. Every occurrence inside each text node is now wrapped in order, so the in-conversation hit order lines up with `n/N`.
+- Breadcrumb and jump were inconsistent: detection used "the last heading above the viewport top" while a jump puts the heading 20 px below the top, so clicking the breadcrumb switched it to the previous heading. Both now use the viewport's **middle line**, which both reflects the section filling most of the screen and stays consistent with every jump target.
+- The level filter used to be a "show up to level N" prefix that could not skip an intermediate level; it is now a per-level switch.
+- The turn header (the time row) jumped to the turn's **user message**; it now jumps to the **start of that turn's model reply**, and turns without any headings — which have only this row in the panel — are clickable too.
+- `# comment` / `## example` lines inside a ``` fenced code block were treated as headings and leaked into the outline: they have no element to jump to, and they shifted the index of the real headings after them so those jumped to the wrong place. Heading parsing now skips fenced blocks (``` and ~~~, info strings, longer closing fences, up to 3 spaces of indentation).
+- There was a gap between the pinned group header and the toolbar above it: the scroll container's 6 px top padding is a wall a sticky row cannot pass. The top padding is gone, so the header butts against the toolbar; spacing between groups comes from the divider.
+
 ## [0.3.3] - 2026-09-10
 
 ### Added
