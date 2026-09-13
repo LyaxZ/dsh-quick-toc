@@ -2,6 +2,29 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.5.0] - 2026-09-12
+
+### Added
+- **Whole-session turn index**: with the host's `turnOutline` projection the outline now covers **every turn of the session**, including turns the paged event window has not loaded. Unloaded turns appear as entries tagged 未加载 with the host's prompt/response previews (host-side budgets: 50 / 120 characters); clicking one pages that turn in through the host's turn-jump loader and scrolls to it. On a host without the projection the panel degrades to loaded turns only.
+- **Row subtitles**: under each heading the panel shows the first sentence of that section's body (skipping blank lines, fenced code, table rules and bare bullet markers), so identically-titled headings can be told apart at a glance.
+- **Hover previews**: hovering a heading or result row opens a card after ~0.26s with the title, turn time, heading path and the section's opening (up to 260 characters); docked right, the card opens to the left; leaving the row fades it out.
+- **Search normalization (always on)**: letter case, full-width/half-width forms and runs of whitespace count as the same match, and the highlight lands on the real characters of the original text.
+- **"Fuzzy" switch**: an independent toggle next to the title/full-text pill. When on, a query also matches text with a little material wedged in between (subsequence matching with a bounded gap); the setting is remembered.
+- **Unloaded turns are searchable too**: full-text scope also searches the previews of unloaded turns, and clicking such a hit loads the turn first, then locates and highlights.
+- **Edge hints**: under the search results, "scroll up to load earlier messages" — dismissed by the first upward scroll. In the outline, reaching the first turn (or scrolling down while already at the last) flashes "已经是最早的消息" / "已经到底了" at the bottom of the panel: fade in, ~2.6s hold, fade out.
+
+### Changed
+- **Auto-follow tracks more tightly**: the artificial delay is gone, the outline positions itself instantly instead of animating after the conversation, and the highlight transition dropped from 0.3s to 0.15s. Following no longer depends on the one scroll container captured at mount — it listens on the document in the capture phase and re-queries the container on every run, with a slow poll as a backstop, so it also keeps working after programmatic jumps (the native turn rail).
+- **The turn being read is marked by a closed blue box** (light fill + outline + left accent bar) that fades in and out; other turns are no longer dimmed into grey (0.6 → 0.85) and the panel's idle opacity went 0.45 → 0.72, which makes the whole list far more readable.
+- **Heading-less turns** promote their time row to body-level size and weight (12px / 600 / primary colour) instead of a grey caption, and they now look the same as headed turns when they are the one being read.
+- Active-state colour collapsed onto a single source: the search button, the level-filter button (including while it animates shut), the title/full-text pill, the fuzzy switch, the level chips and the current result row all use the same tint.
+- The click on the host's "load earlier" is throttled to 900ms while scrolling the outline (one continuous scroll cannot hammer the pager); scrolling the outline still both expands the index and loads older conversation, as in 0.4.x.
+- Every UI string now comes from one table, preparing the zh/en split (the 0.5.0 interface is still Chinese).
+
+### Fixed
+- After jumping with the native turn rail (the tick bar on the right of the conversation), the outline stopped following and no longer lit up the turn being read: the follow listener was bound to the scroll container captured **at mount**, and a jump that repages the window replaces that container, so the listener sat on a discarded node and never saw another scroll event. It now listens on the document in the capture phase and re-queries the current container on every run.
+- A turn without Markdown headings could never become the turn being read (no highlight, no follow): the node→turn map used by the follow only registered messages that carry headings. Every node of the turn (the user message and each model reply) is registered now.
+
 ## [0.4.0] - 2026-09-11
 
 ### Added
