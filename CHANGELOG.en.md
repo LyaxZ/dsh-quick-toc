@@ -2,6 +2,24 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.5.1] - 2026-09-13
+
+### Added
+- **"Back to the newest row" button**: a round button in the outline list's lower-right corner. It fades in whenever the list is not at its bottom and fades out once it is; clicking scrolls the outline back to the newest entry (smooth for a short distance, instant when the list is far up).
+- **Turn stamps carry the day**: the time shown in group headers, search result rows and hover cards is no longer a bare `HH:MM` — yesterday reads `昨天 15:04`, the day before `前天 15:04`, anything older `25-09-11 15:04` (two-digit year; decided by calendar day, not a 24-hour difference).
+- **Failures are reported**: a turn that produced no reply at all (request timeout, upstream error) now shows a `请求失败` row under its group header with the host's own error text; clicking it jumps to that error in the conversation, and the error text is searchable in full-text scope (its result row is tagged 请求失败).
+
+### Changed
+- **The header now holds two buttons per side**: the heading-level filter and the dock toggle on the left, search and collapse on the right, with a spacer pinning the pairs to the two ends; the three-bar identity mark on the left is gone.
+- **The level filter popup is left-aligned with its button** (it used to be right-aligned).
+- **The mount diagnostic is silent by default**: the console no longer prints `[dsh-quick-toc] panel mounted …`. To diagnose, run `localStorage.setItem("dsh-quick-toc.debug", "1")` and reload — the line then reports `turnOutline` and the jump loader's stage-by-stage state, while normal use stays quiet.
+- **Long jumps land instantly**: a jump across a long history no longer "stops halfway" (short jumps still glide smoothly); after landing it re-checks for ~0.6s, which corrects a target that moved while content was mounting.
+
+### Fixed
+- **Failed or aborted turns were mislabelled 未加载**: those turns have no model reply, so they carried neither a time nor headings and were re-listed as unloaded turns. A loaded user message now counts as "this turn is loaded", failures additionally show their error row, and a user-aborted turn simply shows as a heading-less turn.
+- **Scrolling the outline up to load older messages bounced the transcript back to the newest turn**, so paging up never got anywhere: the host force-scrolls to the bottom whenever a scroll is not attributed to the reader while it still believes the reader sits at the bottom, and a page-in triggered from the outline matches exactly that condition. The plugin now lifts the transcript just off the bottom stick zone before clicking the host's "load earlier", so the page-in keeps its place.
+- **A heading-less turn's group header was formatted unlike every other header**: it used to be enlarged (12px / 600 / primary colour), which made it read as a different kind of entry. All group headers now share one style (11px, secondary colour, one row box); a heading-less turn is simply a group with no rows under its header.
+
 ## [0.5.0] - 2026-09-12
 
 ### Added
