@@ -2,6 +2,25 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.6.0] - 2026-09-14
+
+### Added
+- **A bilingual interface**: a new language setting — `follow the host` (default; uses whatever language DSH currently runs in), `中文` or `English`. Every interface string comes from one table, falling back to Chinese when an English entry is missing. Chinese stamps keep the relative words `昨天` / `前天`; English reads yesterday as the word (`yesterday`) and carries the numeric `YY-MM-DD HH:MM` date for anything older (no "2 days ago").
+- **A plugin-configuration card**: a "Conversation Outline" card under **Settings → Plugins → Plugin configuration** (the same place DSH's own configurable plugins live), holding the language, the default docked edge (left by default), the heading levels shown, fuzzy search, the hover preview card and the console diagnostic switch. A changed field is marked "customized" and gets its own reset control back to the default.
+- **The panel and the card are live in both directions**: they read and write one shared store. Dragging or toggling in the panel shows up in the card, and a change made in the card takes effect on the panel's next render — no page reload either way.
+- **Preferences move into DSH's settings**: the preferences above no longer live only in the browser; they are written to the Host settings document, for which the plugin now ships a host half (it registers the `dsh-quick-toc` settings namespace with range validation). A local mirror stays in the browser: on a page that may not write settings (DSH keeps them read-only off a loopback address) the panel keeps working off the mirror, exactly as 0.5.x did. Values left behind by a 0.5.x install are imported into the host layer once, the first time it answers — and only while the user layer is still empty, so nothing already configured gets stomped.
+
+### Changed
+- **Long jumps glide again**: 0.5.1 stopped animating long jumps to fix the "lands halfway" bug; 0.6.0 brings the animation back as a glide **drawn frame by frame by the plugin** (ease-in-out, ~0.37–0.77s by distance), not via the browser's smooth scrolling — some setups carry that call out as an instant jump, and drawing it guarantees a visible scroll on any setup. Every frame re-aims at the target's live offset (so a host re-page mid-flight is followed), and the landing is briefly re-checked afterwards (~0.6s), so a cross-page jump never stops halfway.
+- **The outline fills a taller panel**: when the panel is opened or dragged taller and the latest page is shorter than the list viewport (blank space below the newest group), the window grows until the content fills the height or every turn is shown.
+- **The "currently reading" highlight fades over 0.4s** (opacity, blue fill and border transition together, with the pinned header's blue layer in sync) — the colour change between groups is now clearly visible and calmer.
+- **Top offset, width and height left the settings**: they describe this screen, so they are drag-only now and keep being saved per browser; the card no longer offers numeric inputs for them.
+- **Preferences are read and written in one place**: the panel no longer writes `localStorage` on every pointer move; changes are merged and persisted after a short delay, while the live position during a drag stays in the panel's own state. The position/size keys are unchanged (`panelY.v1` / `panelW.v1` / `panelH.v1`); the other keys become the mirror of the host settings (same names, fallback layer).
+- **The diagnostic switch moved into the card**: tick it there and the mount line prints on the spot — no more hand-editing `localStorage` and reloading.
+
+### Fixed
+- **The panel crashed on some conversations (React #310)**: the number of hooks it called could differ between two renders — both the bail-out when `useChat` is missing and the early return for "this conversation has no displayable turn yet" sat below part of the hook list, so those hooks reappeared on a later render and React threw `Rendered more hooks than during the previous render`, taking the panel and its slot down with it (present in 0.5.0 and 0.5.1). The panel is now split into a hook-free outer guard and an inner component, so every render calls exactly the same hooks.
+
 ## [0.5.1] - 2026-09-13
 
 ### Added

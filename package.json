@@ -1,7 +1,7 @@
 {
   "name": "dsh-quick-toc",
-  "version": "0.5.1",
-  "description": "Conversation TOC for DeepSeek Harness (DSH): turn-grouped Markdown outline covering the whole session (unloaded turns included), title/full-text search with an optional fuzzy switch, hover previews, in-chat match highlighting, heading-level filter and reading-position auto-follow",
+  "version": "0.6.0",
+  "description": "Conversation TOC for DeepSeek Harness (DSH): turn-grouped Markdown outline covering the whole session (unloaded turns included), title/full-text search with an optional fuzzy switch, hover previews, in-chat match highlighting, heading-level filter, reading-position auto-follow, a Chinese/English interface and a plugin-configuration card",
   "type": "module",
   "main": "lib/index.js",
   "files": [
@@ -42,8 +42,14 @@
   },
   "peerDependencies": {
     "react": "^18.2.0",
+    "@deepseek-ai/schemastery": "^3.18.0",
     "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.1",
     "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.1"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/schemastery": {
+      "optional": true
+    }
   },
   "license": "MIT",
   "keywords": [
