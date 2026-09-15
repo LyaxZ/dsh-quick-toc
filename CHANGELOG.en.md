@@ -2,6 +2,21 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.6.1] - 2026-09-15
+
+### Added
+- **A panel-scale slider**: the card gains a "Panel scale" row — a **50%–200% slider in 5% steps** (the same control shape as the font-tune plugin's slider) that scales the panel's **content** (text, icons, buttons and their spacing). The scale does **not** change the panel's own size: a width and height dragged to some size stay exactly that size at 50% and at 200%, so magnifying simply shows less on screen at once. Dragging only moves the readout and the settings document is written **once the pointer is released** (no rewrite per notch); the readout keeps the dragged value until the host confirms it, so it never flashes back to the old number.
+- **A narrow panel's header**: the four buttons stay on one line — the empty middle gives way first, and once the buttons would touch, the row becomes sideways-scrollable (the wheel over the header reaches the buttons behind the edge) while the grey grab bar above fades out.
+
+### Changed
+- **The jump animation goes back to the browser's own smooth scrolling**: the motion is handed to the container's `scrollTo({behavior:"smooth"})` — advanced on the wall clock, so it takes the same time on a 60Hz and a 240Hz panel, and it coasts to a stop. Three guards remain: step out of DSH's stick-to-bottom zone before jumping; re-aim once when the target's live offset drifts by more than 40px (the host re-paging moves it); and re-issue the call when the animation was cut short by the host's own compensation scroll (more than 400ms with less than a pixel of movement). Only a browser that carries the call out as an instant jump falls back to the plugin's frame-by-frame glide (also timed in milliseconds, quick off the mark and coasting to a stop).
+- **Panel size limits removed**: the width used to be clamped to 180–560px and the height had a 160px floor. Only a "still draggable back" floor of 120px wide / 60px high remains; how large or small it gets is the reader's call.
+- **The panel scale acts on the content only** (see above): the factor applies inside the panel, so the panel's own width, height, position, collapse clip and collapse animation are untouched.
+
+### Fixed
+- **Long jumps were an instant jump on a 240Hz panel**: 0.6.0's frame-by-frame glide was timed in **frames** (22–46 of them), and 46 frames is only about 190ms on a 240Hz display (measured: 5078px in 188ms, roughly four times too fast), which reads as a teleport or a uniform blur; the same frame count is about 770ms at 60Hz, which is why neither the offline tests nor a headless browser could see it. The animation is now timed in real milliseconds, independent of the refresh rate.
+- **A dragged panel size sprang back to its old size**: the panel kept "what I published" and "what I adopted from outside" in one ledger. Any settings write or host snapshot refresh during a drag then compared the **not-yet-persisted** old value against that ledger and pulled the panel back to its previous size, cancelling the pending write — the drag was silently undone. The two directions are now kept apart: a value is adopted only when it differs from both the panel's live state and the value the panel itself just sent, and size/position are never read back from the settings at all (this panel is their only writer, so a read could only ever return a stale copy).
+
 ## [0.6.0] - 2026-09-14
 
 ### Added
