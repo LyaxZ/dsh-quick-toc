@@ -2,6 +2,19 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.6.2] - 2026-09-15
+
+### Added
+- **A vertical position for the collapsed handle**: the card gains a "Handle position" row — a **0%–100% slider in 1% steps** that decides where the edge handle sits vertically once the panel is collapsed: `0%` at the bottom, `100%` at the top, and `50%` (the previously fixed centred spot) by default. The handle follows that height on whichever edge the panel is docked to.
+
+### Changed
+- **Writing a default value back means "not customized"**: as soon as a card field is back at its default (a slider returned to the default step, a switch returned to its default state, the level set back to the default selection), the entry leaves the document's user layer — the "customized" badge and that field's "Reset" go with it, exactly as if it had never been changed. 0.6.1 and earlier pinned the default into the settings document and kept the badge.
+
+### Fixed
+- **A panel size could fail to reach storage**: the size write is debounced by 0.4s, and the "already published" record was advanced the moment a write was scheduled — so a second adjustment inside that window (dragging the height, dragging the top bar, toggling a level or the fuzzy switch) cancelled the pending write while the record already counted it as published, and that size was never written again. Measured: drag the width 200 → 150 and then drag the height, and the stored width stayed 200 — the next load brought the panel back 200px wide. The record now advances only when the write really happens, and a cancelled write is issued again on the next pass.
+- **A narrow or short panel's size was stored in vain**: the limits used when reading a size back disagreed with the drag limits — dragging allows 120px wide and 60px high, but anything under 180px wide / 160px high was discarded as invalid on the next load, dropping the panel back to the default width. Both sides now share the same floors (120px / 60px).
+- **The first height drag jumped while the height was "auto"**: the drag started from a fixed 400px guess, so a panel that was in fact taller or shorter jumped to a wrong height on the very first move. It now starts from the panel's measured height (the visual height after the panel scale — the unit that gets stored), falling back to 400px only when nothing can be measured.
+
 ## [0.6.1] - 2026-09-15
 
 ### Added
