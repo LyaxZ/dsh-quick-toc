@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.6.3] - 2026-09-15
+
+### Fixed
+- **The configuration card's expand/collapse chevron did not match the host's arrows**: it was a text character (⌄), thinner than the host's 14×14 SVG chevron icon, and the glyph's ink is not centred inside its 20px line box — the rotation turned around the box centre, so the glyph swung aside instead of flipping in place. It is now the host's own 14×14 SVG chevron (an inline SVG whose path is byte-identical to the icon the host uses, with the class on the `<svg>` itself — the same structure as the host's plugin card), so expanding and collapsing flip it around the icon's own centre.
+
 ## [0.6.2] - 2026-09-15
 
 ### Added
