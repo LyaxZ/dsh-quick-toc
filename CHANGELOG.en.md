@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.2] - 2026-09-22
+
+### Added
+- **Curtain scale**: the settings card gains a "Curtain scale" slider (50%-200%, 5% steps) that scales the text, icons and buttons inside the curtain while the curtain's own size stays as it is; it is independent of the panel scale. The curtain's content starts one notch smaller than before — 100% on the slider is 90% of the previous size.
+
 ## [0.7.1] - 2026-09-19
 
 ### Added
