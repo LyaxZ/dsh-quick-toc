@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "engines": {
-    "dsh": ">=0.1.5-rc.1"
+    "dsh": ">=0.1.5-rc.1 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0"
   },
   "exports": {
     ".": "./lib/index.js",
@@ -36,15 +36,16 @@
     "compatibility": {
       "dshReleases": {
         "0.1.5-rc.1": "compatible",
-        "0.1.5-rc.2": "compatible"
+        "0.1.5-rc.2": "compatible",
+        "0.1.7-alpha.1": "compatible"
       }
     }
   },
   "peerDependencies": {
     "react": "^18.2.0",
     "@deepseek-ai/schemastery": "^3.18.0",
-    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.1",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.1"
+    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.1 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.1 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/schemastery": {

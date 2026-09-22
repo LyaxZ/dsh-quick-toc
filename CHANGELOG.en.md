@@ -6,6 +6,7 @@ All notable changes to **dsh-quick-toc** are documented here. Chinese version: [
 
 ### Added
 - **Curtain scale**: the settings card gains a "Curtain scale" slider (50%-200%, 5% steps) that scales the text, icons and buttons inside the curtain while the curtain's own size stays as it is; it is independent of the panel scale. The curtain's content starts one notch smaller than before — 100% on the slider is 90% of the previous size.
+- **DSH 0.1.7-alpha.1 support**: one installed package now works on both 0.1.5-rc.x and 0.1.7-alpha.x, using whichever settings interface, configuration-card slot and session-switch call the running host actually offers; tested on both 0.1.5-rc.2 and 0.1.7-alpha.1.
 
 ## [0.7.1] - 2026-09-19
 
