@@ -2,6 +2,14 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.4] - 2026-09-23
+
+### Fixed
+- **Opening the curtain had no animation on a long session**: opening the curtain made the outline's own auto-loader pull the whole session in at once (measured: DOM nodes 1365 to 46150, single long tasks of 275-897ms), so the curtain's 0.46s drop was over before a frame of it could paint. Automatic loading now requires a real reader gesture (a wheel tick on the list, a key on the panel, a press on the list); a geometric coincidence (a short list that happens to fit, a freshly opened curtain, a resized window) is no longer treated as a load request.
+- **Switching the dock made the panel disappear on one side and slide in from the other**: the switch moved `left`, which is not in the transition list, so the box teleported while only the offset was tweened. The panel now always sits on one fixed anchor, and its open, collapsed, either-dock and curtain-handoff positions are all offsets on that anchor, so a dock switch is a pure translate animation.
+- **The collapsed panel came to rest left of the position it opens from (8px on the left dock)**: the collapse clip was a fixed panel width (plus 8px on the left dock) while the box actually travelled a panel width plus 16px, so the visible edge drifted. The clip now matches the travel, which keeps the visible edge on the panel's own open edge line all the way out, the same on both docks.
+- **A collapse occasionally came to rest in the wrong place**: the host re-measures the conversation area while the collapse is running, which moves the line the panel aims at (measured: the tuck-in landed at 1396 instead of 1526). The open-to-closed step now freezes the geometry that collapse started with; the next open reads the area afresh.
+
 ## [0.7.3] - 2026-09-23
 
 ### Changed
