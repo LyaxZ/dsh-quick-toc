@@ -2,6 +2,12 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.3] - 2026-09-23
+
+### Changed
+- **Compatible with DSH 0.1.5-rc.3 and 0.1.7-alpha.2**: both new releases were exercised point by point (the panel and the curtain, row jumps and older-history loading, the title/full-text/cross-session searches, switching sessions from a cross-session hit, the configuration card, and the settings document's reads and writes) with no code change needed; the compatibility declaration and the README's compatibility table follow.
+- The implementation notes now cover both host lines: the settings service and the configuration-card slot are each described for the rc line and for the alpha line (previously only the rc one was written down).
+
 ## [0.7.2] - 2026-09-22
 
 ### Added
