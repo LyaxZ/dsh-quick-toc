@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.6] - 2026-09-24
+
+### Fixed
+- **On the 0.1.7 line the settings card's writes only reached the browser**: on a profile whose entry id differs from the first candidate name (the real profile names the entry `dsh-quick-toc` while the first candidate is `quick-toc`), the `configForms.describe()` view was still EMPTY at the moment the plugin applied, so the code that looks up the settings namespace guessed a candidate name the host does not serve and bound a form that never became ready. The card still opened and still took clicks, but every write fell back to this browser's mirror while the settings document (the profile's `cordis.patch.yml` on 0.1.7) stayed untouched — and the console stayed silent. Now an empty view means "the document has not arrived", not "the host serves nothing": the plugin no longer guesses, it subscribes to `describe()` and binds once the document is there, and only then registers the card; a host that never serves a document still gets the card after 4 seconds, reading and writing the browser mirror (the documented fallback layer). Verified on both lines: on 0.1.7-rc.1 the profile's `cordis.patch.yml` gained `lang: en`, on 0.1.5-rc.3 `settings.yaml`'s `dsh-quick-toc:` became `{ handle: 0.6, autoLoad: false, lang: en }`.
+
 ## [0.7.5] - 2026-09-24
 
 ### Changed

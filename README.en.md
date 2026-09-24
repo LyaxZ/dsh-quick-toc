@@ -42,7 +42,7 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 
 | Plugin | Supported DSH |
 | --- | --- |
-| **0.7.x** (latest, 0.7.5) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1 |
+| **0.7.x** (latest, 0.7.6) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1 |
 | 0.6.x (0.6.3) | 0.1.5-rc.1, 0.1.5-rc.2 |
 | 0.5.x (0.5.1) | 0.1.5-rc.1, 0.1.5-rc.2 |
 | 0.4.x (0.4.1) | 0.1.5-rc.1, 0.1.5-rc.2 |
