@@ -1,4 +1,12 @@
 # dsh-quick-toc bundle patch: one loader row.
+#
+# The row id is the settings key from DSH 0.1.7-rc.1 on: that line imports the
+# sections of the removed settings.yaml by matching each section against the
+# entry of the same name, and this plugin's host half registered the namespace
+# `dsh-quick-toc` (its package name). Keeping the id equal to that namespace is
+# what carries an existing installation's saved preferences over; naming it
+# `quick-toc` would leave them behind. On the 0.1.5-rc lines the id is only a
+# loader key, so the same value is harmless there.
 - insert:
-    - id: quick-toc
+    - id: dsh-quick-toc
       name: dsh-quick-toc

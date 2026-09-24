@@ -2,6 +2,16 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.5] - 2026-09-24
+
+### Changed
+- **DSH 0.1.7-rc.1 is supported**: it is the 0.1.7 interface set moved onto the rc channel (`settingsScope`, `settings.plugin.item`, `sessions.open` and `installSection` are all gone; it shares `configForms`, `plugins.bundle.config`, `uiWorkspace` and `settings.configure` with 0.1.7-alpha.x), and no code change was needed. Measured in an isolated environment: the host booted with no error, and the panel, the curtain, Esc, the dock switch and the collapse were all exercised on a real session with no browser error. `dsh.compatibility.dshReleases` records it.
+- **The declared compatibility floor moved to 0.1.5-rc.3**: the older 0.1.5-rc.1 and 0.1.5-rc.2 are no longer declared (`engines.dsh` and both peer ranges follow), and the README's compatibility table matches.
+- **The loader row id shipped in this package now equals the settings namespace** (`quick-toc` to `dsh-quick-toc`): from DSH 0.1.7 on, the settings document is a set of forms addressed by **profile entry id**, and the old `settings.yaml` is renamed to an import source whose sections are matched to entries of the same name; an id that does not match the namespace the plugin registered leaves an existing installation's saved preferences behind in that import file (the plugin then reads empty values). With matching names this package can live in the profile's `dsh.profile.bundles` (0.1.7's plugin manager only offers a configuration page for packages listed there), and on 0.1.5-rc.3 the id is only a loader key, so the same value is harmless. **Being in `bundles` and a profile patch `insert:` are mutually exclusive**: the same entry id twice makes the host refuse to boot.
+
+### Fixed
+- **A binding fallback for the settings scope**: the host's settings document can still be loading when a plugin applies (0.1.7-rc.1 answers `status: "loading"` for that form), and the code used to accept only a one-shot "ready" snapshot; it now falls back to the first candidate form that EXISTS and lets the subscription take over once the document arrives.
+
 ## [0.7.4] - 2026-09-23
 
 ### Fixed

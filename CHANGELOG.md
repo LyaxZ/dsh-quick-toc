@@ -2,6 +2,16 @@
 
 **dsh-quick-toc** 的重要变更都记录在这里。英文版见 [CHANGELOG.en.md](CHANGELOG.en.md)。
 
+## [0.7.5] - 2026-09-24
+
+### 变更
+- **支持 DSH 0.1.7-rc.1**：它是 0.1.7 那套接口搬到 rc 通道（`settingsScope`、`settings.plugin.item`、`sessions.open`、`installSection` 都已不存在，与 0.1.7-alpha.x 共用 `configForms`、`plugins.bundle.config`、`uiWorkspace`、`settings.configure`），代码不需要改动。隔离环境实测：宿主启动无报错，面板、幕布、Esc、停靠切换与收起在一段真实会话上逐项通过，浏览器无报错。`dsh.compatibility.dshReleases` 随之增加该版本。
+- **声明的兼容下限收到 0.1.5-rc.3**：更早的 0.1.5-rc.1、0.1.5-rc.2 不再声明（`engines.dsh` 与两条 peer 区间同步收紧），README 兼容表跟上。
+- **插件自带的 loader 行 id 与设置命名空间对齐**（`quick-toc` → `dsh-quick-toc`）：DSH 0.1.7 起设置文档改为按**入口 id** 寻址的表单，旧 `settings.yaml` 被改名为导入源、按同名把旧配置映射到入口；id 与插件注册的命名空间不一致时，已保存的偏好会被留在导入文件里（插件读到空值）。同名之后本插件可以放进 profile 的 `dsh.profile.bundles`（0.1.7 的插件管理页只在 bundles 里的包上给出配置页），0.1.5-rc.3 上 id 只是加载器键、同样无害。**装进 `bundles` 与 profile patch 的 `insert:` 不能同时存在**（同名 entry id 会让宿主直接启动失败）。
+
+### 修复
+- **设置作用域的绑定兜底**：宿主设置文档在插件加载时可能仍在载入（0.1.7-rc.1 实测该表单的 `status` 为 `loading`），原先只认一次「就绪」快照；现在会退到第一个存在的候选表单，由订阅在文档到位后接续。
+
 ## [0.7.4] - 2026-09-23
 
 ### 修复
