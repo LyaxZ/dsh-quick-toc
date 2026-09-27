@@ -2,6 +2,12 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.7] - 2026-09-27
+
+### Fixed
+- **On the 0.1.7 line the settings card had disappeared**: 0.1.7 removed the whole Settings → Plugins → Plugin configuration page (that line has only the sidebar's Plugins page), and the card was registered on the bundle page alone, so the Plugins page's Official group had nothing to click. The plugin now has its own entry there (`plugins.item`, titled after the panel), and opening it shows the card already expanded; the card on the bundle page is unchanged.
+- **On a long session the curtain's drop could be over before it was ever seen**: opening the curtain re-lays out the whole list at the curtain's width, and on a long session that commit is a long task in itself, so an animation clock started inside it had already run its 0.46s before the first frame painted. The animation is now re-armed once the open state is in the DOM (paying that layout first, then starting the clock).
+
 ## [0.7.6] - 2026-09-24
 
 ### Fixed
