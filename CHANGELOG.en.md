@@ -2,6 +2,14 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.8] - 2026-09-27
+
+### Changed
+- **DSH 0.1.7-rc.2 is supported**: it shares the whole plugin interface with rc.1 (the configuration card still registers into `plugins.item`, `plugins.bundle.config` and the rc line's `settings.plugin.item`, the settings service is still `configForms`, and the Plugins page's slot contract is byte-for-byte rc.1's), so no code change was needed; it was exercised point by point in an isolated environment (host boot, plugin status, the Plugins page's entry and card, a card write landing in the settings document, sessions, panel and curtain).
+
+### Fixed
+- **Opening the curtain's search column no longer re-lays out the outline every frame**: the column used to transition its own width, and because the outline is the flex item next to it, every frame re-laid out the whole rendered list (measured on a 34-row list: one width step per frame, ~18ms frames and a 76ms first hitch; the cost grows with the list). The layout now flips once and the movement rides on a transform (the column slides in from off the right edge while the outline is flipped back to where it sat and released), which measured under 32ms for the first frame, with the resting geometry unchanged.
+
 ## [0.7.7] - 2026-09-27
 
 ### Fixed
