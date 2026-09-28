@@ -1,0 +1,4 @@
+# Keep every checkout at LF. The shipped bundle is compared byte-for-byte against the npm
+# tarball and the GitHub release assets, so a CRLF rewrite of the working copy would silently
+# change what `npm pack` produces. core.autocrlf is on for this machine, hence this file.
+* text=auto eol=lf
