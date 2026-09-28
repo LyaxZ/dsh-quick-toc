@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.9] - 2026-09-28
+
+### Fixed
+- **The curtain had no drop or retract animation while the system asked for reduced motion (Windows' "animation effects" switched off)**: it appeared and vanished with no movement at all. The curtain now always plays the two, while the rest of the plugin's motion still follows that system setting.
+
 ## [0.7.8] - 2026-09-27
 
 ### Changed
