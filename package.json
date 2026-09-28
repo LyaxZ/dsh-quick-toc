@@ -14,7 +14,7 @@
     "LICENSE"
   ],
   "engines": {
-    "dsh": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0"
+    "dsh": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0"
   },
   "scripts": {
     "test": "node test/render.mjs"
@@ -42,15 +42,16 @@
         "0.1.7-alpha.1": "compatible",
         "0.1.7-alpha.2": "compatible",
         "0.1.7-rc.1": "compatible",
-        "0.1.7-rc.2": "compatible"
+        "0.1.7-rc.2": "compatible",
+        "0.2.0-rc.1": "compatible"
       }
     }
   },
   "peerDependencies": {
     "react": "^18.2.0",
     "@deepseek-ai/schemastery": "^3.18.0",
-    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0",
-    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0"
+    "@deepseek-ai/dsh-client-ui-chat": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0",
+    "@deepseek-ai/dsh-client-ui-conversation": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/schemastery": {
