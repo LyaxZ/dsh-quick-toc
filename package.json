@@ -16,6 +16,9 @@
   "engines": {
     "dsh": ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.2.0-0"
   },
+  "scripts": {
+    "test": "node test/render.mjs"
+  },
   "exports": {
     ".": "./lib/index.js",
     "./client": "./lib/client.js",
