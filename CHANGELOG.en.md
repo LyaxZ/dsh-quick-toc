@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.11] - 2026-09-28
+
+### Changed
+- **The three pointer triangles now have rounded corners, and the dock toggle's is as large as the other header icons**: the triangles on the side handle, the droplet on the tab strip and the dock toggle were sharp-cornered, and the toggle's was noticeably smaller than its neighbours; all three now share one rounded outline and the toggle's matches the header icons.
+
 ## [0.7.10] - 2026-09-28
 
 ### Fixed
