@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.10] - 2026-09-28
+
+### Fixed
+- **The droplet handle appeared with no animation while the system asked for reduced motion (Windows' "animation effects" switched off)**: once the curtain retracted the handle simply appeared, with none of its growth out of the view-tab strip's lower line, even though the same handle was animated when it went away. It now animates in both directions.
+
 ## [0.7.9] - 2026-09-28
 
 ### Fixed
