@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.12] - 2026-09-28
+
+### Changed
+- **DSH 0.2.0-rc.1 support**: no code changed; the declared host range now reaches into 0.2.x, because a ceiling below 0.2.0 makes DSH's compatibility preflight refuse to load the plugin. An isolated environment was exercised point by point (the host starts without a warning, the composed config holds one entry for this plugin, the Plugins page entry and its configuration card, the card's write landing in the settings document, a clean console).
+
 ## [0.7.11] - 2026-09-28
 
 ### Changed
