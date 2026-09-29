@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.13] - 2026-09-28
+
+### Changed
+- **The compatibility section keeps only the conclusions**: the README no longer walks through the historical per-release verification; it keeps the declared host range, why a prerelease needs an explicit branch, the 0.2.0-rc.1 admission note and the market's rule for reading compatibility information. The per-release support statements stay in the changelog.
+
 ## [0.7.12] - 2026-09-28
 
 ### Changed
