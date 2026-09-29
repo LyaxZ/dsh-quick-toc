@@ -118,8 +118,13 @@ let SCROLL = { heads: [], rows: new Map(), top: 0 };
 const scrollport = fakeEl({
   querySelectorAll: (sel) => (sel === "[data-chat-anchor-key]" ? [...SCROLL.rows.keys()].map((k) => SCROLL.rows.get(k)) : sel === "button" ? (SCROLL.buttons || []) : sel.includes("h1") ? SCROLL.heads : []),
   // SCROLL.left is mutable so a scenario can move the conversation area sideways
-  // (the plugin must follow it: see "the panel stays inside the window")
-  getBoundingClientRect: () => ({ top: SCROLL.top, left: SCROLL.left === undefined ? 300 : SCROLL.left, right: (SCROLL.left === undefined ? 300 : SCROLL.left) + 1000, bottom: SCROLL.top + 600, width: 1000, height: 600 }),
+  // (the plugin must follow it: see "the panel stays inside the window"), and SCROLL.width
+  // so a scenario can make the column narrow (the docked panel's handle steps aside there)
+  getBoundingClientRect: () => {
+    const left = SCROLL.left === undefined ? 300 : SCROLL.left;
+    const width = SCROLL.width === undefined ? 1000 : SCROLL.width;
+    return { top: SCROLL.top, left, right: left + width, bottom: SCROLL.top + 600, width, height: 600 };
+  },
 });
 scrollport.scrollHeight = 5000;
 scrollport.clientHeight = 600;
@@ -1890,11 +1895,24 @@ th = render(propsFor(SNAP));
 const card = collect(th, (n) => n.props && n.props.className === "dqt-hover")[0];
 ok("hovering a heading row opens the preview card", !!card);
 ok("the card shows the section's opening text", card && textOf(card).includes("一些说明"), card ? textOf(card) : "no card");
-ok("the card is fixed-positioned and cannot steal the hover", card.props.style.position === "fixed" && card.props.style.pointerEvents === "none");
+ok("the card is fixed-positioned and takes the pointer (its pin lives there)", card.props.style.position === "fixed" && card.props.style.pointerEvents === "auto", String(card.props.style.pointerEvents));
 firstRow.props.onMouseLeave({ currentTarget: { style: {}, querySelector: () => null } });
 th = render(propsFor(SNAP));
-ok("leaving the row starts a fade-out instead of dropping the card", !!collect(th, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-hover-closing"))[0]);
-tickTimeouts(); // the 240ms close
+const hoverCardNow = () => collect(th, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-hover") && !String(n.props.className || "").split(/\s+/).includes("dqt-hover-closing"))[0];
+const closingNow = () => !!collect(th, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-hover-closing"))[0];
+ok("leaving the row only arms the close: the card is still there to be reached", !!hoverCardNow() && !closingNow(), `card=${!!hoverCardNow()} closing=${closingNow()}`);
+// the pointer travels onto the card (to its pin) inside the grace window
+const reachable = hoverCardNow();
+reachable.props.onMouseEnter();
+tickTimeouts(340); // longer than the grace: an armed close would have fired by now
+th = render(propsFor(SNAP));
+ok("...and reaching the card keeps it open, so the pin can be clicked", !!hoverCardNow() && !closingNow(), `card=${!!hoverCardNow()} closing=${closingNow()}`);
+// leaving the card closes it: grace, then the fade
+hoverCardNow().props.onMouseLeave();
+tickTimeouts(300);
+th = render(propsFor(SNAP));
+ok("leaving the card starts a fade-out instead of dropping the card", closingNow(), `closing=${closingNow()}`);
+tickTimeouts(); // the 240ms fade
 th = render(propsFor(SNAP));
 ok("the card is gone after the fade", !collect(th, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-hover")).length);
 
@@ -4225,6 +4243,38 @@ ok("unpinning from the card fades it instead of making it vanish",
 tickTimeouts();
 tp = render(propsFor(SNAP));
 ok("...and the pin is gone after the fade", !pinnedEl(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+store.clear(); resetComponent();
+
+console.log("--- scenario 29 (0.9.0): a narrow window parks the side handle and keeps the droplet ---");
+store.clear(); resetComponent();
+SCROLL.width = 1000; // room for the docked panel
+let tNarrow = render(propsFor(SNAP));
+tickTimeouts(400); // the handle appears 300ms after the panel collapses
+tNarrow = render(propsFor(SNAP));
+const sheetUpIn = (t) => collect(t, (n) => n.props && n.props["data-sheet-shell"] === "on").length > 0;
+const dropletIn = (t) => collect(t, (n) => n.props && n.props["data-sheet-handle"] === "on").length > 0;
+const pillIn = (t) => byTitle(t, "展开大纲")[0];
+ok("with room to spare the side handle is live", !!pillIn(tNarrow) && pillIn(tNarrow).props.style.pointerEvents === "auto", String(pillIn(tNarrow) && pillIn(tNarrow).props.style.pointerEvents));
+ok("...and nothing has opened by itself", !sheetUpIn(tNarrow), `sheet=${sheetUpIn(tNarrow)}`);
+// the conversation column shrinks: the handle steps aside on its own motion
+SCROLL.width = 700;
+tickIntervals(); // the viewport beat
+tNarrow = render(propsFor(SNAP));
+ok("a narrow conversation parks the side handle", !!pillIn(tNarrow) && pillIn(tNarrow).props.style.pointerEvents === "none", String(pillIn(tNarrow) && pillIn(tNarrow).props.style.pointerEvents));
+ok("...with the same slide-home motion it always uses", String(pillIn(tNarrow).props.style.clipPath).indexOf("inset(0 0 0 0)") < 0, String(pillIn(tNarrow).props.style.clipPath));
+ok("...keeping the droplet above the conversation", dropletIn(tNarrow), `droplet=${dropletIn(tNarrow)}`);
+ok("...and opening nothing by itself", !sheetUpIn(tNarrow), `sheet=${sheetUpIn(tNarrow)}`);
+// narrower still: same story, no handle over the text
+SCROLL.width = 480;
+tickIntervals();
+tNarrow = render(propsFor(SNAP));
+ok("a very narrow conversation keeps the droplet as the way in", dropletIn(tNarrow), `droplet=${dropletIn(tNarrow)}`);
+ok("...and still parks the side handle", pillIn(tNarrow).props.style.pointerEvents === "none", String(pillIn(tNarrow).props.style.pointerEvents));
+// room comes back: the handle returns
+SCROLL.width = 1000;
+tickIntervals();
+tNarrow = render(propsFor(SNAP));
+ok("widening the window brings the side handle back", pillIn(tNarrow).props.style.pointerEvents === "auto", String(pillIn(tNarrow).props.style.pointerEvents));
 store.clear(); resetComponent();
 
 /* ------------------------------------------------------------------ manifest guard
