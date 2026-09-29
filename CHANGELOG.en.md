@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.8.2] - 2026-09-29
+
+### Changed
+- **DSH 0.2.0-rc.2 support**: no code changed; the new prerelease is registered in the compatibility declaration. An isolated environment was exercised point by point (the host starts without a warning, the Plugins page entry and its configuration card, the card's write landing in the settings document, the outline panel's hover and pin, a clean console).
+
 ## [0.8.1] - 2026-09-29
 
 ### Fixed
