@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.7.14] - 2026-09-28
+
+### Changed
+- **The compatibility section keeps no explanatory text**: only the version table remains, with the declared host range and the prerelease notes gone as well; the table's latest marker no longer sits on 0.7.12.
+
 ## [0.7.13] - 2026-09-28
 
 ### Changed
