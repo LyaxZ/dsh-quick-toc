@@ -42,7 +42,7 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 
 | Plugin | Supported DSH |
 | --- | --- |
-| **0.7.x** (latest, 0.7.12) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1 |
+| **0.7.x** (latest, 0.7.13) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1 |
 | 0.6.x (0.6.3) | 0.1.5-rc.1, 0.1.5-rc.2 |
 | 0.5.x (0.5.1) | 0.1.5-rc.1, 0.1.5-rc.2 |
 | 0.4.x (0.4.1) | 0.1.5-rc.1, 0.1.5-rc.2 |
@@ -50,8 +50,6 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 | 0.2.x (0.2.2) | = 0.1.2-rc.1 |
 
 Each major line lists only its newest patch (the defects a new feature introduces are fixed in the patches that follow, so within one major line the newest patch is the one to use; older patches keep working — the plugin does not break existing interfaces).
-
-`engines.dsh` is declared as **`>=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0`**, with the peer ranges shaped the same way (a prerelease needs an explicit branch: node-semver admits one only when some comparator in the range sits on that version's exact `major.minor.patch` tuple and carries a prerelease tag of its own). **0.2.0-rc.1 was tested** with no code change: only the ceiling moved from `<0.2.0-0` to `<0.3.0-0`, because a ceiling below 0.2.0 makes DSH's plugin-compatibility preflight refuse to load the plugin. When installing or updating, the market reads the npm-latest `engines.dsh` and the peer ranges of the `@deepseek-ai/dsh-*` packages present on the machine; `dsh.compatibility.dshReleases` is this repository's own record — neither DSH nor the market reads it.
 
 ## Install
 
