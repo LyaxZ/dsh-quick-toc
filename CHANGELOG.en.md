@@ -2,6 +2,14 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.8.1] - 2026-09-29
+
+### Fixed
+- **The pin on the hover preview could not be clicked**: moving from an outline row towards the card started the fade first, so the card was gone before the pin was reached. Leaving a row now only arms the close, and reaching the card cancels it.
+
+### Changed
+- **The collapsed handle took room from the text in a narrow window**: below a 760-pixel conversation column the collapsed side handle slides back into the divider; the droplet above stays as the way into the outline, and the side handle returns when the window widens.
+
 ## [0.8.0] - 2026-09-29
 
 ### Changed
