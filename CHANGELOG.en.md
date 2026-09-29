@@ -2,6 +2,14 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.8.0] - 2026-09-29
+
+### Changed
+- **The hover preview can be pinned**: a pin button on the card keeps it on screen after the pointer moves away, and its text can be selected; click the pin again, press Escape or click elsewhere to drop it. One pinned card at a time, and it stays where it was put.
+- **Two previews side by side**: while a card is pinned, hovering another row opens a second card next to it — on whichever side has more room — so two places can be compared.
+- **A context menu on outline rows**: right-click a heading row for "Pin this preview / Unpin" and "Jump to the end of this section".
+- **Cards and menus animate in and out**: the pinned card, the hover preview and the row menu all fade in and out instead of appearing or vanishing instantly.
+
 ## [0.7.14] - 2026-09-28
 
 ### Changed
