@@ -4106,6 +4106,127 @@ SCROLL.rows = new Map();
 LAYOUT.list = null; LAYOUT.groups = []; LAYOUT.ghosts = [];
 store.clear(); resetComponent();
 
+console.log("--- scenario 28 (0.8.0): the pinned preview, the row menu, and how cards animate ---");
+store.clear(); resetComponent();
+let tp = render(propsFor(SNAP));
+byTitle(tp, "展开大纲")[0].props.onClick(); // the cards only exist while the panel is open
+tp = render(propsFor(SNAP));
+const rowArgs = (i, top) => ({ currentTarget: { style: {}, querySelector: () => null, getBoundingClientRect: () => ({ top: top === undefined ? 120 + i * 30 : top, left: 40, right: 300, width: 260, height: 22 }) } });
+const rowsAt = (t) => collect(t, (n) => n.props && n.props["data-jump-key"] && n.props.onMouseEnter);
+const hasClass = (n, c) => String((n && n.props && n.props.className) || "").split(/\s+/).includes(c);
+const allCards = (t) => collect(t, (n) => n.props && hasClass(n, "dqt-hover"));
+// a card that is fading out is still mounted (that IS the animation), so "on screen"
+// means "not closing" everywhere below
+const cardsAt = (t) => allCards(t).filter((c) => !hasClass(c, "dqt-hover-closing"));
+const closingCards = (t) => allCards(t).filter((c) => hasClass(c, "dqt-hover-closing"));
+const pinOff = (t) => collect(t, (n) => n.props && n.props["data-dqt-pin"] === "off")[0];
+const pinOn = (t) => collect(t, (n) => n.props && n.props["data-dqt-pin"] === "on")[0];
+const pinnedEl = (t) => allCards(t).find((c) => String(c.props["data-dqt-pinned"]) === "on");
+const menuEl = (t) => collect(t, (n) => n.props && n.props["data-dqt-menu"] === "on")[0];
+const fadingMenu = (t) => { const m = menuEl(t); return m && hasClass(m, "dqt-rowmenu-closing") ? m : null; };
+const liveMenu = (t) => { const m = menuEl(t); return m && !hasClass(m, "dqt-rowmenu-closing") ? m : null; };
+const menuItems = (t) => { const m = liveMenu(t); return m ? collect(m, (n) => n.props && n.props["data-dqt-menu-item"]) : []; };
+const noop = { preventDefault() {}, stopPropagation() {} };
+const rightClick = (i, y) => Object.assign({ clientX: 120, clientY: y === undefined ? 200 : y }, rowArgs(i), noop);
+
+// ---- pinning from the card's own pin button ----
+rowsAt(tp)[0].props.onMouseEnter(rowArgs(0));
+tickTimeouts(); // the 260ms hover delay
+tp = render(propsFor(SNAP));
+ok("the hover card offers a pin button", !!pinOff(tp));
+pinOff(tp).props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("clicking the pin marks the card as pinned", !!pinOn(tp));
+ok("...and the adopted card does not replay its entrance animation (no blink)",
+  hasClass(pinnedEl(tp), "dqt-hover-static"), String(pinnedEl(tp).props.className));
+const pinnedTop = Number(pinnedEl(tp).props.style.top);
+rowsAt(tp)[0].props.onMouseLeave(rowArgs(0));
+tickTimeouts(); // the hover card's own 240ms fade
+tp = render(propsFor(SNAP));
+ok("the pinned card survives the pointer leaving its row", cardsAt(tp).length === 1 && !!pinOn(tp), `${cardsAt(tp).length} cards`);
+
+// ---- the second card, placed clear of the pinned one ----
+rowsAt(tp)[1].props.onMouseEnter(rowArgs(1));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("hovering another row while pinned puts a second card on screen", cardsAt(tp).length === 2, `${cardsAt(tp).length} cards`);
+ok("...and the second card is moved clear of the pinned one",
+  new Set(cardsAt(tp).map((c) => Number(c.props.style.top))).size === 2, cardsAt(tp).map((c) => c.props.style.top).join(", "));
+ok("with the pinned card high up the second card sits below it",
+  Number(cardsAt(tp)[1].props.style.top) > Number(cardsAt(tp)[0].props.style.top),
+  cardsAt(tp).map((c) => c.props.style.top).join(", "));
+ok("the pinned card never moves from where it was put (it follows nothing)",
+  Number(cardsAt(tp)[0].props.style.top) === pinnedTop, `${cardsAt(tp)[0].props.style.top} vs ${pinnedTop}`);
+
+// ---- the row menu ----
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+ok("right-clicking an outline row opens a row menu", !!liveMenu(tp));
+ok("...and the menu carries the pop animation class", hasClass(liveMenu(tp), "dqt-rowmenu"), String(liveMenu(tp).props.className));
+fireDocument("mousedown", { button: 2, target: { closest: () => null } }); // the right-click itself
+tp = render(propsFor(SNAP));
+ok("a right-click does not drop the pinned card", !!pinOn(tp), cardsAt(tp).map((c) => c.props.className).join(" "));
+ok("the pinned row's menu offers to unpin instead", textOf(menuItems(tp)[0]).includes("取消钉住"), textOf(menuItems(tp)[0]));
+ok("the menu offers jump-to-section-end as well",
+  menuItems(tp).length === 2 && textOf(menuItems(tp)[1]).includes("跳到本节末尾"), menuItems(tp).map(textOf).join(" | "));
+
+// ---- closing the menu fades it out instead of making it vanish ----
+menuItems(tp)[1].props.onClick(noop); // the jump item
+tp = render(propsFor(SNAP));
+ok("running a menu item leaves the menu fading, not gone", !!fadingMenu(tp), String(menuEl(tp) && menuEl(tp).props.className));
+ok("...and the pin survives a jump", !!pinOn(tp));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("...and the menu is gone once the fade is over", !menuEl(tp));
+
+// ---- unpinning fades the card out too ----
+fireDocument("mousedown", { target: { closest: () => null } }); // a click anywhere else
+tp = render(propsFor(SNAP));
+ok("a click outside fades the pinned card instead of dropping it", closingCards(tp).length === 1 && !!pinOn(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+ok("...and a fading card takes no pointer events", closingCards(tp)[0].props.style.pointerEvents === "none", String(closingCards(tp)[0].props.style.pointerEvents));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("...and the pinned card is gone once the fade is over", !pinnedEl(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+
+// ---- pinning from the menu: where it lands, and that it animates in ----
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+menuItems(tp)[0].props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("pinning from the menu keeps a card on screen", !!pinOn(tp));
+// the card belongs where its ROW is, not where the right-click landed (the menu opens
+// at the pointer: clientY 200, the row's top is 120)
+ok("...and it is anchored to the row, not to the click point",
+  Number(cardsAt(tp)[0].props.style.top) === 120 - 4, String(cardsAt(tp)[0].props.style.top));
+ok("...and a card that was not on screen already animates in",
+  !hasClass(pinnedEl(tp), "dqt-hover-static"), String(pinnedEl(tp).props.className));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("...and the menu is gone after its fade", !menuEl(tp));
+
+// ---- Escape takes the menu first ----
+rowsAt(tp)[1].props.onContextMenu(rightClick(1));
+tp = render(propsFor(SNAP));
+fireDocument("keydown", { key: "Escape", preventDefault() {}, stopPropagation() {} });
+tp = render(propsFor(SNAP));
+ok("the first Escape fades the menu and keeps the pin", !!fadingMenu(tp) && !!pinOn(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("...and the menu is gone once its fade is over", !menuEl(tp));
+
+// ---- unpinning through the card's own button fades it out (never a pop) ----
+// (the document-level Escape path is exercised in the live probe; the button drives the
+//  very same unpinCard() and is what the offline harness handles most faithfully)
+const pinOnBtn = collect(tp, (n) => n.props && n.props["data-dqt-pin"] === "on")[0];
+pinOnBtn.props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("unpinning from the card fades it instead of making it vanish",
+  closingCards(tp).length === 1, allCards(tp).map((c) => c.props.className).join(" | "));
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("...and the pin is gone after the fade", !pinnedEl(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+store.clear(); resetComponent();
+
 /* ------------------------------------------------------------------ manifest guard
  * The declared host range is what DSH's plugin-compatibility preflight reads before it imports
  * this plugin, so narrowing it silently locks the plugin out of a host line (0.2.0-rc.1 was
