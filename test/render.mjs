@@ -4279,15 +4279,15 @@ store.clear(); resetComponent();
 
 /* ------------------------------------------------------------------ manifest guard
  * The declared host range is what DSH's plugin-compatibility preflight reads before it imports
- * this plugin, so narrowing it silently locks the plugin out of a host line (0.2.0-rc.1 was
+ * this plugin, so narrowing it silently locks the plugin out of a host line (0.2.0-rc.2 was
  * refused until the ceiling moved past 0.2.0). These assertions pin the range and the
  * compatibility map, so any future narrowing turns the suite red instead of a host refusing us.
  * Hosts we have exercised: 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2,
- * 0.2.0-rc.1. */
+ * 0.2.0-rc.1, 0.2.0-rc.2. */
 {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
   const RANGE = ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0";
-  const HOSTS = ["0.1.5-rc.3", "0.1.7-alpha.1", "0.1.7-alpha.2", "0.1.7-rc.1", "0.1.7-rc.2", "0.2.0-rc.1"];
+  const HOSTS = ["0.1.5-rc.3", "0.1.7-alpha.1", "0.1.7-alpha.2", "0.1.7-rc.1", "0.1.7-rc.2", "0.2.0-rc.1", "0.2.0-rc.2"];
   ok("engines.dsh keeps the range that admits every exercised host line",
     manifest.engines && manifest.engines.dsh === RANGE, String(manifest.engines && manifest.engines.dsh));
   for (const peer of ["@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation"]) {
