@@ -2,6 +2,26 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.9.0] - 2026-10-03
+
+### Added
+- **A settings button**: the panel's first button opens this plugin's own settings page — the language, heading levels, outline density and the rest are one click away from the panel.
+- **Search history**: an empty search box lists the words recently searched for; one tap searches the word again, and the list can be cleared at any time.
+- **Outline density**: the settings card gains an "Outline density" row — "Comfy" keeps the current spacing, "Compact" tightens the rows so more entries fit on screen.
+
+### Changed
+- **A slimmer toolbar**: the side panel's top bar keeps four buttons and the curtain's keeps three. "Questions only" moved into the search scope (Title → Prompts → Full text → Session), the curtain opens from the water-drop handle on the top edge, and the heading levels are picked in the settings card.
+- **Panel outer shadow**: the side panel carries a soft outer shadow (white in a dark theme), so it sits above the conversation; collapsing and expanding still tuck in and out of one line, hard-edged.
+- **Smoother scrolling in long sessions**: outline entries off screen are no longer laid out or painted, so scrolling a very long session no longer stutters; the entries stay in place and jumping, keyboard navigation and hover previews are unaffected.
+
+### Fixed
+- **The curtain did not open where the reader was reading**: the side panel followed the conversation but the curtain landed somewhere else. Both surfaces now agree — opening the curtain lands on the turn being read.
+- **The auto-follow occasionally lagged behind**: scrolling the conversation sometimes left the outline's highlight and list a step late. The follow now keeps up.
+- **Typing a search froze the interface for a long time**: in a long session, entering search terms could stall the page for a long while, at times leaving the browser unresponsive. Results now appear as you type.
+- **The outline was occasionally blank while a surface opened**: opening the side panel or the curtain could show an empty list that only filled in once the surface had landed. The list now paints the whole way in.
+- **The curtain's bottom edge lacked separation**: with the curtain down, its bottom edge nearly merged with the conversation below. The bottom edge now carries a clear line and a soft outer shadow at the bottom.
+- **The curtain did not reach its side edges**: a thin sliver of background showed between the curtain and the edges beside it. The curtain now runs edge to edge.
+
 ## [0.8.2] - 2026-09-29
 
 ### Changed

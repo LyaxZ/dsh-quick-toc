@@ -2,35 +2,37 @@
 
 > **English** | [中文](README.md)
 
-A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline — the same list as a side panel or as a full-width curtain — grouped by conversation turn and covering the whole session (including turns that are not loaded yet), with title/full-text/cross-session search, hover previews, several ways to jump (a heading, a turn header, the end of a section), and a reading position that both follows and is remembered.
+A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline — the same list as a side panel or as a full-width curtain — grouped by conversation turn and covering the whole session (including turns that are not loaded yet), with title/prompts/full-text/cross-session search, hover previews, several ways to jump (a heading, a turn header, the end of a section), and a reading position that both follows and is remembered.
 
 ## Features
 
 - **Turn-grouped outline** — each user message plus its following AI replies form one group; the group header shows the turn's time and a first-line preview, and clicking it jumps to the start of that turn's model reply
 - **Whole-session coverage** — turns the conversation window has not loaded are listed too (tagged `未加载` / "Not loaded", with previews); clicking one loads that turn and jumps to it
 - **Failures are reported** — a turn with no reply at all (request timeout, upstream error) shows `请求失败` / "Request failed" plus the host's error text, and clicking it jumps to that error in the conversation
-- **A full-width curtain** — the droplet handle inside the tab strip along the top of the conversation (or the "curtain" round button in the panel's header) lays the outline out across the full width and drops it down: no scrim, nothing dimmed, larger type and looser rows, three parts per row (level badge / heading / the section's opening), and the search column sliding in from the right; click a row, press Esc or use the ✕ to close. It shares the one list with the docked panel, so the scroll position, the search and the keyboard cursor all carry over
+- **A full-width curtain** — the droplet handle inside the tab strip along the top of the conversation lays the outline out across the full width and drops it down: no scrim, nothing dimmed, larger type and looser rows, three parts per row (level badge / heading / the section's opening), and the search column sliding in from the right; click a row, press Esc or use the ✕ to close. It shares the one list with the docked panel, so the scroll position, the search and the keyboard cursor all carry over
 - **Jump to the end of a section** — hover a heading row, a group header or a result row and a round button fades in at its right end; a group header's button jumps to the end of the whole turn
 - **Cross-session search** — the third scope, "sessions", searches the message bodies of other sessions through the host's full-text index; clicking a hit switches to that session and keeps looking there, and archived / subagent / delisted sessions are skipped with a count
-- **Questions only** — one click folds the outline down to each turn's time and the first line of your prompt
+- **Questions only** — the "prompts" position of the search scope keeps the results to your prompts; with an empty box it folds the outline down to each turn's time and the first line of your prompt
 - **A remembered reading position** — reopening a session returns to the turn you were last reading (within half an hour; the card can switch it off)
 - **Keyboard navigation** — ↑/↓ move the cursor, Enter jumps, Home / End go to either end, Esc collapses; the cursor's position is announced to screen readers
 - **Bilingual** — the interface language can follow the host, or be forced to Chinese or English; Chinese stamps use `昨天` / `前天`, English reads yesterday as the word (`yesterday`) and carries the `YY-MM-DD HH:MM` date for anything older
-- **A plugin-configuration card** — a "Conversation Outline" card under Settings → Plugins → Plugin configuration: the language, the default docked edge, the heading levels shown, where the collapsed handle sits, the remembered reading position, fuzzy search, hover previews and the diagnostic switch; changed fields are marked "customized" and can be reset individually (returning a field to its default drops the mark), and the card and the panel stay in sync
+- **A plugin-configuration card** — a "Conversation Outline" card under Settings → Plugins → Plugin configuration: the language, the default docked edge, the heading levels shown, the outline density, where the collapsed handle sits, the remembered reading position, fuzzy search, hover previews and the diagnostic switch; changed fields are marked "customized" and can be reset individually (returning a field to its default drops the mark), and the card and the panel stay in sync
 - **Turn stamps carry the day** — yesterday reads `昨天 15:04`, the day before `前天 15:04`, anything older `25-09-11 15:04`, so times never blur together in a session spanning days (with the interface in English every stamp older than today carries a `YY-MM-DD` date instead)
 - **Row subtitles** — under each heading, the first sentence of that section, so identically-titled headings can be told apart
 - **Hover previews** — hovering a heading row shows the section's opening, the turn time and the heading path
-- **Search** — title / full-text scopes; click any result row to locate and highlight that hit, `n/N` Enter stepping, Esc to close
+- **Search** — title / prompts / full-text / session scopes (the scope button cycles them); click any result row to locate and highlight that hit, `n/N` Enter stepping, Esc to close
+- **Search history** — an empty search box lists the words recently searched for; one tap searches the word again, and the list can be cleared in one click
 - **Search tolerance** — case, full-width/half-width and whitespace differences match automatically; the "fuzzy" switch also allows a little material wedged between keywords
 - **In-chat highlighting** — matched keywords are highlighted in the conversation; the current match is highlighted distinctly
 - **Sticky group headers** — while scrolling the outline, the current turn's header stays pinned at the top of the panel
-- **Heading level filter** — the round levels button in the header pops down H1–H6 switches for any combination
+- **Heading level filter** — "Heading levels shown" in the settings card picks any H1–H6 combination; the panel's first button jumps straight to that settings page
 - **Auto-follow** — the turn being read lights up in a closed blue box while you scroll the conversation; the outline follows on its own
 - **Jumping** — click a heading to jump to its position in the conversation, with the scroll animation handed to the browser's own smooth scrolling (advanced on the wall clock, so it takes the same time on a 60 Hz and a 240 Hz panel); when the host re-pages and moves the target mid-flight the jump re-aims, and when the host's own scrolling cancels the animation it is issued again, so a cross-page jump never stops halfway; a browser that carries the call out at once gets a frame-by-frame glide drawn by the plugin instead
 - **Back to the newest row** — after paging far up, a floating button in the list's lower-right corner returns to the newest entry in one click (it appears when the list is not at its bottom and disappears once it is)
 - **Back to where I left** — closing the panel or the curtain remembers the row that was at the top (each surface keeps its own, and neither overwrites the other); the next time that surface opens, a floating button in the list's upper-right corner returns that row to **where it sat**. It fades out — and forgets the record — once it is used, or as soon as you scroll back there yourself, until the next close. Under the same rule, opening the panel or the curtain puts the **row being read** at the top of the list (when that turn is one of the newest few the list is already at its end, so the row lands at the bottom)
 - **Dockable and resizable** — drag the top bar to move the panel, ◀ / ▶ to dock left or right, drag an edge to resize (no upper bound, down to 120px wide), and collapse it into an edge handle (its height is set by the card's "Handle position"); position and size are remembered per browser (top offset, width and height are adjusted by dragging only)
 - **Panel scale** — a slider in the settings card scales the **content** (text, icons, buttons and their spacing) from 50% to 200% in 5% steps while the **panel's own size stays exactly as dragged**; dragging only moves the readout, and the settings document is written once you let go. A narrow panel keeps its four header buttons on one line: the empty middle gives way first, then the whole row scrolls sideways (wheel over the header), and the grey grab bar fades out
+- **Outline density** — an "Outline density" row in the settings card with two settings: "Comfy" keeps the current spacing, "Compact" tightens the rows and group spacing so more entries fit on screen
 - **Curtain scale** — a second slider scales the **curtain's content** from 50% to 200% in 5% steps while the curtain's own size stays as it is; the panel scale and the curtain scale are independent of each other. The curtain's content starts one notch smaller than before (100% on the slider is 90% of the previous size), and only the outline inside the curtain is scaled — the conversation itself is untouched
 - **Paging** — the most recent groups show first; scrolling up both expands the index and loads older conversation
 - **Edge hints** — a brief hint at the bottom of the panel when you keep scrolling past the first or the last entry
@@ -42,7 +44,8 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 
 | Plugin | Supported DSH |
 | --- | --- |
-| **0.8.x** (latest, 0.8.2) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
+| **0.9.x** (latest, 0.9.0) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
+| 0.8.x (0.8.2) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
 | 0.7.x (0.7.14) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
 | 0.6.x (0.6.3) | 0.1.5-rc.1, 0.1.5-rc.2 |
 | 0.5.x (0.5.1) | 0.1.5-rc.1, 0.1.5-rc.2 |
@@ -78,20 +81,21 @@ After installing, restart DSH and open the Web UI. The panel starts collapsed: c
 
 - **Jumping**: click an outline heading or a group header to jump to it; entries tagged `未加载` / "Not loaded" load that turn first, and a failed turn's error row jumps to that error in the conversation
 - **Search**: open the box with the magnifier, click a result to locate and highlight it, Enter to step through matches, Esc to close
+- **Search history**: with the box empty, tap any recently searched word to search it again; "clear" drops the whole list
 - **Search tolerance**: full-width/half-width, case and whitespace differences match automatically; for looser matching turn on the "fuzzy" switch next to the search box
-- **Level filter**: click the round levels button in the header to pop down the H1–H6 switches
+- **Level filter**: click the panel's first button (the settings icon) to land on this plugin's settings page, and pick the heading levels under "Heading levels shown"
 - **Moving and docking**: drag the top bar to move, ◀ / ▶ to switch sides
 - **Resizing**: drag the right edge, bottom edge or bottom-right corner (no upper bound, down to 120px wide; a very narrow panel scrolls its header sideways)
 - **Loading older turns**: scroll up inside the outline (it both expands the index and loads older conversation)
-- **The curtain**: click the droplet handle in the tab strip along the top of the conversation (or the "curtain" round button in the panel's header) for the full-width outline; click any row, press Esc or use the ✕ to close
+- **The curtain**: click the droplet handle in the tab strip along the top of the conversation for the full-width outline; click any row, press Esc or use the ✕ to close
 - **Jump to the end of a section**: hover a heading row, a group header or a result row and click the round button at its right end
 - **Cross-session search**: click the scope button beside the search box twice to reach "sessions" and search other sessions through the host's full-text index; clicking a hit switches to that session and keeps looking there
 - **Keyboard**: with the panel open, ↑/↓ move the cursor, Enter jumps, Home / End go to either end and Esc collapses; inside the search box ↑/↓ step through the matches
-- **Questions only**: the speech-bubble button in the header folds the outline down to each turn's time and the first line of your prompt
+- **Questions only**: the scope button (Title / Prompts / Full text / Session) switches to "prompts" — the results keep only your prompts, and with an empty box the outline folds down to each turn's time and the first line of your prompt
 - **Back to the newest row**: after paging far up, click the floating button in the list's lower-right corner
 - **Back to where I left**: closing the panel or the curtain remembers the row you were looking at; the floating button in the upper-right corner takes you back the next time you open it
 - **Reading position**: scroll the conversation and the turn you are reading is boxed in blue; the outline follows
-- **Settings**: expand the "Conversation Outline" card under **Settings → Plugins → Plugin configuration** for the language, the default docked edge, the panel scale (a 50%–200% slider in 5% steps), where the collapsed handle sits (a 0%–100% slider in 1% steps: 0% at the bottom, 100% at the top, 50% centred by default), the heading levels shown, the remembered reading position and the fuzzy / hover / diagnostic switches; changed fields can be reset individually (returning one to its default drops the mark). The card and the panel are live in both directions, with no reload needed, and the preferences follow the DSH settings document
+- **Settings**: expand the "Conversation Outline" card under **Settings → Plugins → Plugin configuration** for the language, the default docked edge, the outline density (comfy / compact), the panel scale (a 50%–200% slider in 5% steps), where the collapsed handle sits (a 0%–100% slider in 1% steps: 0% at the bottom, 100% at the top, 50% centred by default), the heading levels shown, the remembered reading position and the fuzzy / hover / diagnostic switches; changed fields can be reset individually (returning one to its default drops the mark). The card and the panel are live in both directions, with no reload needed, and the preferences follow the DSH settings document
 
 ## Diagnostics
 

@@ -652,8 +652,9 @@ const SNAP = conv([
 ]);
 
 /* ------------------------------------------------------------ scenario run */
-const levelsBtn = (t) => collect(t, (n) => n.props && n.props.title === "标题层级筛选")[0];
-const levelsPop = (t) => collect(t, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-levels-pop"))[0];
+// 0.9.0: the toolbar's level picker is gone with its button; the pinwheel button
+// is the settings jump now (fonttune's button, same icon, same behaviour)
+const settingsBtn = (t) => collect(t, (n) => n.props && n.props.title === "打开插件设置")[0];
 const levelChip = (t, lv) => collect(t, (n) => n.props && n.props.children === "H" + lv && typeof n.props.onClick === "function")[0];
 
 console.log("--- scenario 1: normal render ---");
@@ -661,9 +662,9 @@ SCROLL = { heads: [], rows: new Map(), top: 0 };
 resetComponent();
 let tree = render(propsFor(SNAP));
 ok("panel renders (not null) for a conversation with headings", tree !== null);
-ok("no level chips occupy the layout while the popup is closed", !levelsPop(tree) && ![1, 2, 3, 4, 5, 6].some((lv) => !!levelChip(tree, lv)));
-ok("a round levels button sits in the header", !!levelsBtn(tree) && levelsBtn(tree).props.className === "dqt-levels-btn");
-ok("the levels button is round with a corner-shape override", levelsBtn(tree).props.style.borderRadius === "50%" && levelsBtn(tree).props.style.cornerShape === "round");
+ok("a round settings button sits in the header", !!settingsBtn(tree) && settingsBtn(tree).props.className === "dqt-settings-btn");
+ok("the settings button is round with a corner-shape override", settingsBtn(tree).props.style.borderRadius === "50%" && settingsBtn(tree).props.style.cornerShape === "round");
+ok("no level picker remains in the toolbar", collect(tree, (n) => n.props && String(n.props.className || "").includes("dqt-levels-pop")).length === 0);
 ok("no folding controls remain anywhere", !textOf(tree).includes("全折叠") && !textOf(tree).includes("全展开") && !textOf(tree).includes("▾") && !textOf(tree).includes("▸"), "text: " + textOf(tree).slice(0, 120));
 ok("sticky group header rendered", collect(tree, (n) => n.props && n.props.style && n.props.style.position === "sticky").length >= 1);
 ok("heading text 总览 present", textOf(tree).includes("总览"), "text: " + textOf(tree).slice(0, 160));
@@ -671,61 +672,87 @@ ok("deep heading 更深一层 present with all levels on", textOf(tree).includes
 ok("turn time shown (HH:MM)", /\d{2}:\d{2}/.test(textOf(tree)));
 ok("group headers carry the turn's user preview", textOf(tree).includes("帮我看看"), "text: " + textOf(tree).slice(0, 200));
 
-console.log("--- scenario 2: level picker popup ---");
+console.log("--- scenario 2: the settings jump + the level set ---");
 store.clear(); resetComponent();
 let props = propsFor(SNAP);
 tree = render(props);
-levelsBtn(tree).props.onClick({});
+settingsBtn(tree).props.onClick({});
 tree = render(props);
-const pop = levelsPop(tree);
-ok("clicking the round button opens the picker", !!pop);
-ok("the picker holds six chips labelled H1–H6", [1, 2, 3, 4, 5, 6].every((lv) => !!levelChip(tree, lv)), "text: " + textOf(pop).slice(0, 60));
-ok("the picker is LEFT-aligned with the header's control button (10px, no right anchor)", pop.props.style.left === 10 && pop.props.style.right === undefined && /0 6px 20px/.test(pop.props.style.boxShadow), JSON.stringify({ left: pop.props.style.left, right: pop.props.style.right, shadow: pop.props.style.boxShadow }));
-ok("the picker grows from the button's center (enter animation via class)", pop.props.style.transformOrigin === "12px top" && /dqt-levels-pop( |$)/.test(pop.props.className) && !pop.props.className.includes("closing"), JSON.stringify({ origin: pop.props.style.transformOrigin, cls: pop.props.className }));
-fireDocument("pointerdown", { target: { closest: () => null } });
-tree = render(props);
-const closingPop = levelsPop(tree);
-ok("closing plays the shrink-back + fade-out animation (exit class)", !!closingPop && closingPop.props.className.includes("dqt-levels-pop-closing"));
-tickTimeouts(); // the fallback unmount timer fires like it would in the browser
-tree = render(props);
-ok("the picker is gone after the close animation", !levelsPop(tree));
-levelsBtn(tree).props.onClick({});
-tree = render(props);
-ok("the button reopens the picker", !!levelsPop(tree));
-ok("all six levels on by default", textOf(tree).includes("更深一层") && textOf(tree).includes("细节 A"));
-levelChip(tree, 2).props.onClick({}); // H2 off
-tree = render(props);
-let txt = textOf(tree);
-ok("the picker stays open while toggling", !!levelsPop(tree));
-ok("turning H2 off keeps H1 and H3 (arbitrary combination, not a prefix)", txt.includes("总览") && !txt.includes("细节 A") && txt.includes("更深一层"), "text: " + txt.slice(0, 200));
-tickTimeouts(); // the store publishes on a debounce
-ok("level set persisted", store.get("dsh-quick-toc.levels.v1") === "[1,3,4,5,6]", "got " + store.get("dsh-quick-toc.levels.v1"));
-ok("H3 without H2 is still nested under H1 (tree builds across the gap)", txt.includes("更深一层"));
-// an outside pointerdown closes the picker (with the exit animation); a
-// pointerdown inside does not
-fireDocument("pointerdown", { target: { closest: () => null } });
-tree = render(props);
-ok("an outside pointerdown starts the close animation", levelsPop(tree).props.className.includes("dqt-levels-pop-closing"));
-tickTimeouts();
-tree = render(props);
-ok("the picker is unmounted after the exit animation", !levelsPop(tree));
-levelsBtn(tree).props.onClick({});
-tree = render(props);
-ok("the button reopens the picker", !!levelsPop(tree));
-fireDocument("pointerdown", { target: { closest: (sel) => (sel === ".dqt-levels-pop" ? {} : null) } });
-tree = render(props);
-ok("a pointerdown inside the picker keeps it open", !!levelsPop(tree));
-levelChip(tree, 2).props.onClick({}); // H2 back on
-tree = render(props);
-ok("turning H2 back on restores it", textOf(tree).includes("细节 A"));
-[2, 3, 4, 5, 6].forEach((lv) => { levelChip(tree, lv).props.onClick({}); tree = render(props); });
-tickTimeouts();
-ok("only H1 left after switching the rest off", store.get("dsh-quick-toc.levels.v1") === "[1]", "got " + store.get("dsh-quick-toc.levels.v1"));
-levelChip(tree, 1).props.onClick({});
-tree = render(props);
-tickTimeouts();
-ok("switching off the last selected level restores all six", store.get("dsh-quick-toc.levels.v1") === "[1,2,3,4,5,6]" && textOf(tree).includes("更深一层"), "got " + store.get("dsh-quick-toc.levels.v1"));
-store.clear();
+ok("a settings jump that cannot land says so (a banner, never silent)", textOf(tree).includes("没有给本插件提供设置页面"), textOf(tree).slice(0, 160));
+// with the host's settings screen on the page the click walks fonttune's chain:
+// the Plugins cell first, then THIS plugin's own row inside it
+const chainClicks = [];
+const fakeNode = (kind, attrs, text) => ({
+  tagName: "BUTTON",
+  textContent: text || "",
+  attrs: attrs || {},
+  getAttribute(name) { return this.attrs[name] !== undefined ? this.attrs[name] : null; },
+  dispatchEvent() { chainClicks.push(kind); return true; },
+  closest() { return null; },
+  querySelectorAll() { return []; }
+});
+const cellNode = fakeNode("cell", { "data-section": "plugins" }, "插件");
+const entryNode = fakeNode("entry", { "data-plugin-item": "quick-toc" }, "对话大纲");
+let cellClicked = false;
+cellNode.dispatchEvent = () => { cellClicked = true; chainClicks.push("cell"); return true; };
+const realQsa = document.querySelectorAll;
+document.querySelectorAll = (sel) => {
+  if (sel === "button") return [cellNode];
+  if (sel.indexOf("[data-plugin-item]") >= 0) return cellClicked ? [entryNode] : [];
+  return [];
+};
+settingsBtn(tree).props.onClick({});
+document.querySelectorAll = realQsa;
+ok("the click opens the Plugins screen and lands on this plugin's entry",
+  chainClicks.length === 2 && chainClicks[0] === "cell" && chainClicks[1] === "entry", JSON.stringify(chainClicks));
+// 0.9.0 regression: a sidebar session TITLED like this plugin must never be taken
+// for its settings entry (the loose "text contains the name, then click the first
+// button inside" rule sent the button to the wrong place on a real page)
+const sessionRow = {
+  tagName: "DIV",
+  role: "treeitem",
+  textContent: "quick-toc插件开发",
+  attrs: {},
+  getAttribute(name) { return name === "role" ? "treeitem" : null; },
+  dispatchEvent() { sessionRow.clicks += 1; return true; },
+  closest() { return null; },
+  querySelectorAll() { return [innerRowButton]; }
+};
+sessionRow.clicks = 0;
+const innerRowButton = {
+  tagName: "BUTTON",
+  textContent: "",
+  attrs: {},
+  getAttribute() { return null; },
+  dispatchEvent() { innerRowButton.clicks += 1; return true; },
+  closest() { return null; },
+  querySelectorAll() { return []; }
+};
+innerRowButton.clicks = 0;
+const searchLike = fakeNode("other", { }, "搜索");
+document.querySelectorAll = (sel) => {
+  if (sel === "button") return [searchLike];
+  if (sel.indexOf("[data-plugin-item]") >= 0) return [sessionRow];
+  return [];
+};
+settingsBtn(tree).props.onClick({});
+document.querySelectorAll = realQsa;
+ok("a session titled like the plugin is never clicked as its settings entry",
+  sessionRow.clicks === 0 && innerRowButton.clicks === 0,
+  "row=" + sessionRow.clicks + " inner=" + innerRowButton.clicks);
+// the level set is a setting (the card owns it now); the outline obeys whatever
+// combination it carries — arbitrary subsets, not level prefixes
+store.clear(); resetComponent();
+setHostField("levels", [1, 3, 4, 5, 6]);
+tree = render(propsFor(SNAP));
+ok("an arbitrary level combination shows exactly those levels (not a prefix)",
+  textOf(tree).includes("总览") && !textOf(tree).includes("细节 A") && textOf(tree).includes("更深一层"),
+  "text: " + textOf(tree).slice(0, 200));
+ok("H3 without H2 is still nested under H1 (the tree builds across the gap)", textOf(tree).includes("更深一层"));
+setHostField("levels", [1]);
+tree = render(propsFor(SNAP));
+ok("a single level shows just that one", textOf(tree).includes("总览") && !textOf(tree).includes("更深一层"), "text: " + textOf(tree).slice(0, 160));
+resetHost(); store.clear();
 store.set("dsh-quick-toc.maxLevel.v1", "2"); // legacy value from a pre-0.4.0 build
 resetComponent();
 setHostStatus("unavailable"); // the legacy migration only matters where the host layer is absent
@@ -745,7 +772,7 @@ const input = collect(tree, (n) => n.type === "input")[0];
 ok("search input rendered after opening search", !!input, "text: " + textOf(tree).slice(0, 120));
 input.props.onChange({ target: { value: "alpha" } });
 tree = render(propsFor(SNAP));
-txt = textOf(tree);
+let txt = textOf(tree);
 ok("title-scope search lists matching headings", txt.includes("alpha alpha 记录"), "text: " + txt.slice(0, 240));
 ok("repeat hits inside one heading are deduped into ×2", txt.includes("×2"), "text: " + txt.slice(0, 240));
 const highlighted = collect(tree, (n) => n.props && n.props.style && n.props.style.background === CHIP && textOf(n).includes("alpha alpha"));
@@ -762,11 +789,15 @@ input.props.onChange({ target: { value: "细节" } });
 tree = render(propsFor(SNAP));
 txt = textOf(tree);
 ok("two matching headings -> two result rows with paths", (txt.match(/细节/g) || []).length >= 2, "text: " + txt.slice(0, 240));
-// switch the scope toggle to full text (its clickable wrapper reads 标题)
+// switch the scope toggle to full text (标题 -> 提问 -> 全文)
+const scopePillEl = (t) => collect(t, (n) => n.props && n.props["data-scope"])[0];
 const scopeBtn = collect(tree, (n) => n.props && typeof n.props.onClick === "function" && textOf(n) === "标题")[0];
 ok("scope toggle present", !!scopeBtn);
 if (scopeBtn) {
-  scopeBtn.props.onClick({ stopPropagation() {} });
+  scopePillEl(tree).props.onClick({ stopPropagation() {} });
+  tree = render(propsFor(SNAP));
+  ok("scope toggle switches the label to 提问", textOf(tree).includes("提问"), "text: " + textOf(tree).slice(0, 120));
+  scopePillEl(tree).props.onClick({ stopPropagation() {} });
   tree = render(propsFor(SNAP));
   ok("scope toggle switches the label to 全文", textOf(tree).includes("全文"), "text: " + textOf(tree).slice(0, 120));
   input.props.onChange({ target: { value: "出现在正文里" } });
@@ -843,12 +874,20 @@ const closedTransition = panel.props.style.transition;
 const collapsedLeft = panelX(panel);
 const collapseLine = 1400 - (100 + 48); // innerWidth - (viewport.right + 48)
 ok("right dock collapsed: clip hides exactly the panel width", panel.props.style.clipPath === `inset(0 ${panelW0}px 0 0)`, panel.props.style.clipPath);
+ok("right dock collapsed: no shadow floats while the panel is away", (() => {
+  const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+  return !!sh && sh.props.style.clipPath === `inset(-24px ${panelW0 - 8}px -24px -24px)`;
+})() === true);
 ok("right dock collapsed: left sits on the collapse line", Math.abs(collapsedLeft - collapseLine) < 0.5, `left=${collapsedLeft} line=${collapseLine}`);
 byTitle(tree, "展开大纲")[0].props.onClick({});
 tree = render(propsFor(SNAP));
 panel = findPanel(tree);
 const openLeft = panelX(panel);
-ok("right dock open: no clip", panel.props.style.clipPath === "inset(0 0 0 0px)", panel.props.style.clipPath);
+ok("right dock open: no clip on the panel (the wipe inset stays the travel distance)", panel.props.style.clipPath === "inset(0 0 0 0px)", panel.props.style.clipPath);
+ok("right dock open: its shadow twin lifts off with a soft halo on all four sides", (() => {
+  const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+  return !!sh && /^0 0 24px -4px rgba\(0, 0, 0/.test(String(sh.props.style.boxShadow)) && String(sh.props.style.transition || "").indexOf("box-shadow") >= 0 && sh.props.style.transform === panel.props.style.transform && sh.props.style.clipPath === "inset(-24px -8px -24px -24px)";
+})() === true);
 ok("right dock open: panel right edge === collapsed left (the hard-won invariant)", Math.abs(openLeft + panelW0 - collapsedLeft) < 0.5, `openRight=${openLeft + panelW0} collapsedLeft=${collapsedLeft}`);
 ok("open panel is visible on the chat view", panel.props.style.opacity > 0, String(panel.props.style.opacity));
 // The slide must not animate a LAYOUT property. `left` is identical in both states (the box
@@ -863,6 +902,28 @@ ok("the slide is compositable: `left` is the same open and shut, and the transit
   && /transform /.test(closedTransition) && !/(^|, )left /.test(closedTransition),
   JSON.stringify([closedStyleLeft, panel.props.style.left, closedTransition, panel.props.style.transition]));
 setHostStatus("ready"); store.clear(); resetComponent();
+
+console.log("--- scenario 7a2: the outer shadow rings the panel on either dock ---");
+store.clear(); resetComponent();
+store.set("dsh-quick-toc.dock.v2", "left");
+resetComponent();
+tree = render(propsFor(SNAP));
+byTitle(tree, "展开大纲")[0].props.onClick({});
+tree = render(propsFor(SNAP));
+const leftPanel = findPanel(tree);
+ok("left dock open: the same four-sided halo on its twin", (() => {
+  const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+  return !!sh && /^0 0 24px -4px rgba\(0, 0, 0/.test(String(sh.props.style.boxShadow));
+})() === true);
+ok("left dock open: no clip on the panel either", !!leftPanel && leftPanel.props.style.clipPath === "inset(0 0 0 0px)", String(leftPanel && leftPanel.props.style.clipPath));
+// a dark scheme rings the panel in WHITE instead (the theme's own raised language)
+const realMatchMedia = globalThis.matchMedia;
+globalThis.matchMedia = () => ({ matches: true });
+tree = render(propsFor(SNAP));
+const darkShadow = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+ok("a dark scheme uses the white halo", !!darkShadow && /^0 0 24px -4px rgba\(255, 255, 255/.test(String(darkShadow.props.style.boxShadow)), String(darkShadow && darkShadow.props.style.boxShadow));
+globalThis.matchMedia = realMatchMedia;
+store.clear(); resetComponent();
 
 console.log("--- scenario 7b: view fade (chat vs other center-column view) ---");
 store.clear();
@@ -1230,7 +1291,9 @@ rows.length = 0;
 // full-text scope: body-text rows must also become the current match (the old
 // bug: they jumped without any highlight)
 const scopeBtn2 = collect(tree, (n) => n.props && typeof n.props.onClick === "function" && textOf(n) === "标题")[0];
-scopeBtn2.props.onClick({ stopPropagation() {} });
+scopeBtn2.props.onClick({ stopPropagation() {} });   // 标题 -> 提问
+tree = render(propsFor(SNAP));
+collect(tree, (n) => n.props && n.props["data-scope"])[0].props.onClick({ stopPropagation() {} });   // 提问 -> 全文
 tree = render(propsFor(SNAP));
 collect(tree, (n) => n.type === "input")[0].props.onChange({ target: { value: "出现在正文里" } });
 tree = render(propsFor(SNAP));
@@ -1290,7 +1353,9 @@ tree = render(propsFor(SNAP));
 collect(tree, (n) => n.props && n.props.title === "搜索标题")[0].props.onClick({ stopPropagation() {} });
 tree = render(propsFor(SNAP));
 const scopeBtn3 = collect(tree, (n) => n.props && typeof n.props.onClick === "function" && textOf(n) === "标题")[0];
-scopeBtn3.props.onClick({ stopPropagation() {} });
+scopeBtn3.props.onClick({ stopPropagation() {} });   // 标题 -> 提问
+tree = render(propsFor(SNAP));
+collect(tree, (n) => n.props && n.props["data-scope"])[0].props.onClick({ stopPropagation() {} });   // 提问 -> 全文
 tree = render(propsFor(SNAP));
 collect(tree, (n) => n.type === "input")[0].props.onChange({ target: { value: "又出现" } });
 tree = render(propsFor(SNAP));
@@ -1535,11 +1600,13 @@ ok("half-width input finds full-width text (normalization is always on)", textOf
 ok("...and it is not reported as 'no match'", !textOf(tn).includes("没有匹配"));
 
 console.log("--- scenario 12d: fuzzy switch beside the scope pill ---");
-const scopePill = (t) => byTitle(t, "当前：仅搜索标题。点击切换为全文搜索")[0];
+const scopePill = (t) => byTitle(t, "当前：仅搜索标题。点击切换为只看提问")[0];
 const fuzzyOff = (t) => byTitle(t, "模糊匹配已关闭：只匹配连续的文字。点击开启")[0];
 const fuzzyOn = (t) => byTitle(t, "模糊匹配已开启：允许关键字中间夹少量其他文字，命中更多")[0];
 ok("the fuzzy switch sits next to the scope pill", !!fuzzyOff(tn));
-scopePill(tn).props.onClick();
+scopePill(tn).props.onClick();           // 标题 -> 提问
+tn = render(normProps);
+collect(tn, (n) => n.props && n.props["data-scope"])[0].props.onClick();   // 提问 -> 全文
 tn = render(normProps);
 searchBox(tn).props.onChange({ target: { value: "模的匹配" } });
 tn = render(normProps);
@@ -1921,9 +1988,13 @@ store.clear(); resetComponent();
 let tk = openSearch(propsFor(SNAP)); // the search button is now open
 const openSearchBtn = byTitle(tk, "搜索标题")[0];
 ok("the open search button uses the shared chip tint", openSearchBtn.props.style.background === CHIP, String(openSearchBtn.props.style.background));
-const scopePillOpen = byTitle(tk, "当前：仅搜索标题。点击切换为全文搜索")[0];
+const scopePillOpen = byTitle(tk, "当前：仅搜索标题。点击切换为只看提问")[0];
 ok("the scope pill's 'on' tint is the same value", scopePillOpen.props.style.color.indexOf("brand-primary") >= 0 || true);
-scopePillOpen.props.onClick();
+scopePillOpen.props.onClick();                 // 标题 -> 提问
+tk = render(propsFor(SNAP));
+const promptsPill = byTitle(tk, "当前：只看提问（搜索只覆盖你的提问，搜索框留空即为提问列表）。点击切换为全文搜索")[0];
+ok("switching to 提问 uses the same chip tint", !!promptsPill && promptsPill.props.style.background === CHIP, String(promptsPill && promptsPill.props.style.background));
+promptsPill.props.onClick();                   // 提问 -> 全文
 tk = render(propsFor(SNAP));
 const fullPill = byTitle(tk, "当前：全文搜索。点击切换为跨会话检索")[0];
 ok("switching to 全文 uses the same chip tint", fullPill.props.style.background === CHIP, String(fullPill.props.style.background));
@@ -1937,16 +2008,6 @@ ok("the cross scope keeps the same chip tint", crossPill.props.style.background 
 const fuzzyInert = byTitle(tk, "跨会话检索走宿主的全文索引，只搜消息正文，模糊开关对它不生效")[0];
 ok("the fuzzy switch stands down in cross scope", !!fuzzyInert && fuzzyInert.props.disabled === true && fuzzyInert.props.style.opacity === 0.45);
 store.clear(); resetComponent();
-tk = render(propsFor(SNAP));
-const levelsOpenBtn = levelsBtn(tk);
-levelsOpenBtn.props.onClick(); // open the H1–H6 picker
-tk = render(propsFor(SNAP));
-ok("the open level picker button uses the same chip tint", levelsBtn(tk).props.style.background === CHIP, String(levelsBtn(tk).props.style.background));
-tickTimeouts(); fireDocument("pointerdown", { target: { closest: () => null } }); // close it again
-tk = render(propsFor(SNAP));
-tickTimeouts(); // the 220ms fallback that tears the popup down
-tk = render(propsFor(SNAP));
-ok("...and returns to the neutral resting tint once it is fully closed", levelsBtn(tk).props.style.background.indexOf("interactive-bg-hover") >= 0, String(levelsBtn(tk).props.style.background));
 
 console.log("--- scenario 12j: heading-less turn rows ---");
 store.clear(); resetComponent();
@@ -2041,15 +2102,15 @@ store.clear(); resetComponent();
 let th13 = render(propsFor(SNAP));
 const walk13 = [...walk(th13)];
 const idxOf = (pred) => walk13.findIndex(pred);
-const iLevels = idxOf((n) => n.props && n.props.title === "标题层级筛选");
+const iSettings = idxOf((n) => n.props && n.props.title === "打开插件设置");
 const iDock = idxOf((n) => n.props && (n.props.title === "移到右侧" || n.props.title === "移到左侧"));
 const iSearch = idxOf((n) => n.props && n.props.title === "搜索标题");
 const iCollapse = idxOf((n) => n.props && n.props.title === "收起");
 const iSpacer = idxOf((n) => n.props && n.props.style && n.props.style.flex === "1 1 auto");
-ok("all four header controls still exist", [iLevels, iDock, iSearch, iCollapse].every((i) => i >= 0), JSON.stringify({ iLevels, iDock, iSearch, iCollapse }));
-ok("the level filter and the dock toggle sit LEFT of the spacer", iLevels >= 0 && iDock >= 0 && iSpacer >= 0 && iLevels < iSpacer && iDock < iSpacer, JSON.stringify({ iLevels, iDock, iSpacer }));
+ok("all four header controls still exist", [iSettings, iDock, iSearch, iCollapse].every((i) => i >= 0), JSON.stringify({ iSettings, iDock, iSearch, iCollapse }));
+ok("the settings jump and the dock toggle sit LEFT of the spacer", iSettings >= 0 && iDock >= 0 && iSpacer >= 0 && iSettings < iSpacer && iDock < iSpacer, JSON.stringify({ iSettings, iDock, iSpacer }));
 ok("search and collapse sit RIGHT of the spacer", iSpacer < iSearch && iSpacer < iCollapse, JSON.stringify({ iSpacer, iSearch, iCollapse }));
-ok("reading order is levels, dock, search, collapse", iLevels < iDock && iDock < iSearch && iSearch < iCollapse, JSON.stringify({ iLevels, iDock, iSearch, iCollapse }));
+ok("reading order is settings, dock, search, collapse", iSettings < iDock && iDock < iSearch && iSearch < iCollapse, JSON.stringify({ iSettings, iDock, iSearch, iCollapse }));
 // every pointer glyph is a filled triangle whose corners carry a little rounding: three
 // quadratic corners in the path and no stroke (a stroked sharp triangle would fatten the glyph
 // instead of rounding it)
@@ -2151,7 +2212,9 @@ const fInput = collect(t15, (n) => n.type === "input")[0];
 const fScope = collect(t15, (n) => n.props && typeof n.props.onClick === "function" && textOf(n) === "标题")[0];
 ok("the search field and scope toggle open for the failure search", !!fInput && !!fScope);
 if (fInput && fScope) {
-  fScope.props.onClick({ stopPropagation() {} });
+  fScope.props.onClick({ stopPropagation() {} });   // 标题 -> 提问
+  t15 = render(projProps(failSnap, FAIL_OUTLINE));
+  collect(t15, (n) => n.props && n.props["data-scope"])[0].props.onClick({ stopPropagation() {} });   // 提问 -> 全文
   t15 = render(projProps(failSnap, FAIL_OUTLINE));
   fInput.props.onChange({ target: { value: "timed out" } });
   t15 = render(projProps(failSnap, FAIL_OUTLINE));
@@ -2504,7 +2567,9 @@ const stripped = codeOutsideDict
 const cjkLines = stripped.split("\n")
   .map((line, i) => [i + 1, line])
   .filter(([, line]) => /[\u4e00-\u9fff]/.test(line))
-  .filter(([, line]) => !/CHAT_VIEW_LABELS|加载\|更早\|loadOlder/.test(line));
+  // CHAT_VIEW_LABELS and the settings-lookup tables hold HOST labels to match in
+  // the DOM (data, not interface text); the 变量名 check keeps the exemption narrow
+  .filter(([, line]) => !/CHAT_VIEW_LABELS|加载\|更早\|loadOlder|PLUGIN_TEXTS|PLUGIN_CONFIG_TEXTS|SETTINGS_NAV_TEXTS|SETTINGS_LAUNCHER_TEXTS/.test(line));
 ok("no hard-coded interface Chinese lives outside the dictionary", cjkLines.length === 0, cjkLines.map(([i, l]) => i + ": " + l.trim()).join(" | "));
 store.clear(); resetComponent();
 
@@ -2581,7 +2646,7 @@ let c24 = renderCard();
 ok("the card starts collapsed, named and described", !!cardHead(c24) && textOf(c24).includes("对话大纲") && textOf(c24).includes("语言与显示偏好") && !textOf(c24).includes("模糊搜索"), textOf(c24).slice(0, 140));
 cardHead(c24).props.onClick({});
 c24 = renderCard();
-ok("expanding shows one row per preference", ["语言", "默认停靠边缘", "显示的标题层级", "面板缩放", "模糊搜索", "悬停预览卡片", "在控制台打印诊断日志"].every((s) => textOf(c24).includes(s)), textOf(c24).slice(0, 220));
+ok("expanding shows one row per preference", ["语言", "默认停靠边缘", "显示的标题层级", "大纲密度", "面板缩放", "模糊搜索", "悬停预览卡片", "在控制台打印诊断日志"].every((s) => textOf(c24).includes(s)), textOf(c24).slice(0, 220));
 ok("position and size are NOT settings (they stay drag-only, per screen)", !textOf(c24).includes("顶边距") && !textOf(c24).includes("宽度") && !textOf(c24).includes("高度"));
 // the three choice rows are inline: the options sit on the label's row (the hint stays below)
 const inlineOrder = [];
@@ -2590,7 +2655,7 @@ collect(c24, (n) => {
   if (n.type === "p" && n.props.className === "dqt-phint") inlineOrder.push("hint");
 });
 ok("the language options sit on the label's row (control before the hint)", inlineOrder[0] === "btn" && inlineOrder[1] === "hint", inlineOrder.join(","));
-ok("...and the joined segments are inline (language, dock + the on/off rows: fuzzy, hover, remember, auto-load, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 7, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
+ok("...and the joined segments are inline (language, dock, density + the on/off rows: fuzzy, hover, remember, auto-load, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 8, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
 ok("...the level chips keep their own row style", collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length === 1, String(collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length));
 ok("...with the three language choices", ["跟随宿主", "中文", "English"].every((s) => textOf(c24).includes(s)));
 ok("...the six level chips on by default", [1, 2, 3, 4, 5, 6].every((lv) => collect(c24, (n) => n.props && n.props.children === "H" + lv && typeof n.props.onClick === "function").length === 1));
@@ -2813,14 +2878,17 @@ provided.sessions = {
   },
   open: (id) => { opened.push(id); },
 };
-const scopePillAny = (t) => byTitle(t, "当前：仅搜索标题。点击切换为全文搜索")[0]
+const scopePillAny = (t) => byTitle(t, "当前：仅搜索标题。点击切换为只看提问")[0]
+  || byTitle(t, "当前：只看提问（搜索只覆盖你的提问，搜索框留空即为提问列表）。点击切换为全文搜索")[0]
   || byTitle(t, "当前：全文搜索。点击切换为跨会话检索")[0]
   || byTitle(t, "当前：跨会话检索（用宿主的全文索引搜所有会话的消息正文）。点击回到仅搜索标题")[0];
 const toCross = (props) => {
   let t = openSearch(props);
-  scopePillAny(t).props.onClick();                 // title -> full
+  scopePillAny(t).props.onClick();                 // 标题 -> 提问
   t = render(props);
-  scopePillAny(t).props.onClick();                 // full -> cross
+  scopePillAny(t).props.onClick();                 // 提问 -> 全文
+  t = render(props);
+  scopePillAny(t).props.onClick();                 // 全文 -> 会话
   return render(props);
 };
 store.clear(); resetComponent();
@@ -2948,15 +3016,17 @@ provided.sessions = SESSION_FACE;
 store.clear(); resetComponent();
 
 console.log("--- scenario 29: questions-only view (the outline's second reading mode) ---");
-const questionsBtn = (t) => collect(t, (n) => n.props && n.props["data-questions"])[0];
+// 0.9.0: the questions view is the scope pill's 提问 position now (标题 -> 提问 ->
+// 全文 -> 会话), so the scenario drives it through the pill.
+const questionsBtn = (t) => collect(t, (n) => n.props && n.props["data-scope"])[0];
 const modeWrapper = (t) => collect(t, (n) => n.props && String(n.props.className || "").split(/\s+/).includes("dqt-list-body"))[0];
 const modeClass = (t) => String(modeWrapper(t).props.className).split(/\s+/).filter((c) => c.indexOf("dqt-mode") === 0).join(" ");
 const groupBox = (t, idx) => collect(t, (n) => n.props && n.props["data-group-idx"] === idx)[0];
 const qHeaderLabel = (t) => collect(t, (n) => n.props && n.props.title === "跳转到该回合的模型回答开头")[0];
 const headerRow = (t) => collect(t, (n) => n.props && n.props.style && n.props.style.position === "sticky" && n.props.style.height)[0];
 store.clear(); resetComponent();
-let t29 = render(propsFor(SNAP));
-ok("the questions-only button starts off", !!questionsBtn(t29) && questionsBtn(t29).props["data-questions"] === "off");
+let t29 = openSearch(propsFor(SNAP));
+ok("the scope pill starts on 标题 (提问 is one click away)", !!questionsBtn(t29) && questionsBtn(t29).props["data-scope"] === "title");
 ok("the full outline lists heading rows", textOf(t29).includes("细节 A") && textOf(t29).includes("排序规则"));
 const normalHeader = qHeaderLabel(t29);
 const normalRow = headerRow(t29);
@@ -2972,7 +3042,7 @@ ok("...and the list fades back in", modeClass(t29) === "dqt-mode-in");
 tickTimeouts();                                  // the 260ms fade-in ends
 t29 = render(propsFor(SNAP));
 ok("the fade classes clear once the switch settles", modeClass(t29) === "");
-ok("the button now reads as on", questionsBtn(t29).props["data-questions"] === "on");
+ok("the pill now reads 提问", questionsBtn(t29).props["data-scope"] === "prompts");
 ok("every turn still has its header (time + prompt)", textOf(t29).includes("帮我看看 quick toc 的排序") && textOf(t29).includes("没有标题的一轮"));
 const bigHeader = qHeaderLabel(t29);
 const bigRow = headerRow(t29);
@@ -2988,13 +3058,44 @@ ok("the current-turn box is built by the SAME code either way (tint, 3px accent,
   && bigActive.props.style.borderRadius === normalActive.props.style.borderRadius
   && bigActive.props.style.transition === normalActive.props.style.transition,
   JSON.stringify([bigActive && bigActive.props.style.backgroundColor, bigActive && bigActive.props.style.borderLeft]));
-ok("the level filter stands down (no heading rows to filter)", collect(t29, (n) => n.props && n.props.className === "dqt-levels-btn")[0].props.disabled === true);
+ok("the questions view shows the prompts", textOf(t29).includes("帮我看看 quick toc 的排序") && textOf(t29).includes("没有标题的一轮"));
 t29 = render(propsFor(SNAP));
-questionsBtn(t29).props.onClick();
+questionsBtn(t29).props.onClick();          // 提问 -> 全文
 tickTimeouts(); tickTimeouts();
 t29 = render(propsFor(SNAP));
 ok("switching back restores the heading rows", textOf(t29).includes("细节 A") && textOf(t29).includes("更深一层"));
-ok("...and the level filter is usable again", collect(t29, (n) => n.props && n.props.className === "dqt-levels-btn")[0].props.disabled === false);
+ok("...and the scope pill has moved on to 全文", !!byTitle(t29, "当前：全文搜索。点击切换为跨会话检索")[0]);
+// 0.9.0: with a query typed the 提问 scope narrows the RESULTS to the prompts —
+// the heading hit stays out of the list and out of the n/N count
+store.clear(); resetComponent();
+t29 = openSearch(propsFor(SNAP));
+collect(t29, (n) => n.props && n.props["data-scope"])[0].props.onClick();   // 标题 -> 提问
+tickTimeouts(); tickTimeouts();
+t29 = render(propsFor(SNAP));
+searchBox(t29).props.onChange({ target: { value: "排序" } });
+t29 = render(propsFor(SNAP));
+tickTimeouts();   // the 220ms "searching" spinner ends: the counter is back
+t29 = render(propsFor(SNAP));
+const resultText29 = textOf(t29);
+const resRows = (t) => collect(t, (n) => n.props && n.props["data-result-idx"] !== undefined).length;
+ok("typed in the 提问 scope, the results keep only the prompts",
+  resultText29.includes("帮我看看 quick toc 的排序") && resultText29.includes("再解释一下排序规则") && resRows(t29) === 2,
+  resRows(t29) + " rows: " + resultText29.slice(0, 160));
+const countOf = (t) => {
+  const span = collect(t, (n) => n.props && n.props.style && n.props.style.minWidth === 30 && n.props.style.textAlign === "center")[0];
+  return span ? textOf(span) : "";
+};
+const totalOf = (c) => Number(String(c).split("/")[1] || 0);
+const filteredCount = countOf(t29);
+collect(t29, (n) => n.props && n.props["data-scope"])[0].props.onClick();   // 提问 -> 全文
+tickTimeouts(); tickTimeouts();
+t29 = render(propsFor(SNAP));
+tickTimeouts();
+t29 = render(propsFor(SNAP));
+const unfilteredCount = countOf(t29);
+ok("...and the match count follows (the heading hits drop out of it)",
+  totalOf(filteredCount) > 0 && totalOf(filteredCount) < totalOf(unfilteredCount),
+  JSON.stringify([filteredCount, unfilteredCount]));
 store.clear(); resetComponent();
 
 console.log("--- scenario 30: a jump the host DROPS is asked again ---");
@@ -3077,7 +3178,15 @@ store.clear(); resetComponent();
 let t31c = openSearch(propsFor(SNAP));
 press(t31c, "Escape");
 t31c = render(propsFor(SNAP));
-ok("Esc collapses the panel", findPanel(t31c).props.style.opacity === 0, String(findPanel(t31c).props.style.opacity));
+ok("Esc collapses the panel (the wipe covers it — no fade involved)", (() => {
+  const p = findPanel(t31c);
+  if (!p) return false;
+  const w = parseFloat(String(p.props.style.width));
+  const m = /inset\(([^)]*)\)/.exec(String(p.props.style.clipPath));
+  if (!m) return false;
+  const parts = m[1].split(/\s+/).map(parseFloat);
+  return Math.max(parts[1] || 0, parts[3] || 0) >= w;
+})() === true, String(findPanel(t31c) && findPanel(t31c).props.style.clipPath));
 store.clear(); resetComponent();
 // ↑/↓ inside the search box step the matches, like Enter does
 let t31d = openSearch(propsFor(SNAP));
@@ -3293,10 +3402,10 @@ ok("...that brightens under the pointer", (() => {
 ok("...centred over the conversation area, bottom on the strip line", topHandle(t33).props.style.left === "730px" && topHandle(t33).props.style.top === 0, JSON.stringify([topHandle(t33).props.style.left, topHandle(t33).props.style.top]));
 openPanel(t33);
 t33 = render(propsFor(SNAP));
-ok("the docked header still offers its curtain button", !!sheetBtn(t33));
-ok("...and the top handle is there too (it is not tied to the panel's state)", !!topHandle(t33));
+ok("the docked header no longer offers a curtain button (four controls only)", !sheetBtn(t33));
+ok("...and the top handle opens the curtain (it is not tied to the panel's state)", !!topHandle(t33));
 const openLeftBefore = panelX(findPanel(t33));
-sheetBtn(t33).props.onClick();
+topHandle(t33).props.onClick();
 t33 = render(propsFor(SNAP));
 // the panel goes home FIRST: it is still a docked panel (fixed) and it is already
 // travelling to its parked spot, while the curtain has not started dropping
@@ -3308,7 +3417,14 @@ ok("...and the curtain only drops once the panel has finished travelling", !!she
 ok("the sheet drops in with its enter animation", !!sheetNode(t33) && String(sheetNode(t33).props.className).includes("dqt-sheet-open"), sheetNode(t33) && String(sheetNode(t33).props.className));
 ok("...full width of the conversation area", sheetShell(t33).props.style.width === 1000 && sheetShell(t33).props.style.left === 300, JSON.stringify([sheetShell(t33).props.style.width, sheetShell(t33).props.style.left]));
 ok("...hanging from the top edge and square where it meets it", sheetShell(t33).props.style.top === 0 && sheetNode(t33).props.style.borderRadius === "0 0 12px 12px", JSON.stringify([sheetShell(t33).props.style.top, sheetNode(t33).props.style.borderRadius]));
-ok("...with NO outer shadow and NO dimming layer over the conversation", sheetNode(t33).props.style.boxShadow === undefined && !collect(t33, (n) => n.props && n.props["data-sheet-backdrop"] === "on")[0]);
+ok("...with NO dimming layer over the conversation", !collect(t33, (n) => n.props && n.props["data-sheet-backdrop"] === "on")[0]);
+ok("the bottom edge carries a visible line (border-box keeps it inside the clip)", sheetNode(t33).props.style.boxSizing === "border-box" && /^1px solid rgba\(120, 120, 120/.test(String(sheetNode(t33).props.style.borderBottom)), String(sheetNode(t33).props.style.borderBottom) + " / " + String(sheetNode(t33).props.style.boxSizing));
+ok("...and an outer shadow lands at the bottom, following the rounded corners", (() => {
+  const shadow = String(sheetNode(t33).props.style.boxShadow || "");
+  const layers = shadow.split(/\), /).map((s) => s + ")");
+  return layers.length === 2 && layers.every((layer) => /^0 /.test(layer)) && layers.every((layer) => /-\d+px/.test(layer));
+})(), String(sheetNode(t33).props.style.boxShadow));
+ok("...with room below the curtain for the shadow to land in", sheetNode(t33).props.style.height === "calc(100% - 24px)", String(sheetNode(t33).props.style.height));
 ok("...carrying the SAME list (one ref, not a second one)", collect(sheetNode(t33), (n) => n.props && n.props.className === "dqt-list").length === 1);
 ok("...still showing the outline rows", textOf(t33).includes("细节 A"));
 // the handle is pressed flat and held for a beat so that press is seen, then it goes
@@ -3329,7 +3445,7 @@ ok("the hover preview card floats ABOVE the curtain, not behind it", !!curtainCa
 const sheetCss = cssText();
 ok("the curtain flies down from above the line it hangs from", sheetCss.includes("@keyframes dqt-sheet-in{from{transform:translateY(-100%)}to{transform:translateY(0)}}") && sheetCss.includes("@keyframes dqt-sheet-out{from{transform:translateY(0)}to{transform:translateY(-100%)}}"));
 ok("...and it is not a fade", !/dqt-sheet-(in|out)\{[^}]*opacity/.test(sheetCss));
-ok("...with an outer clip box so it is never seen above that line", sheetShell(t33).props.style.overflow === "hidden" && sheetNode(t33).props.style.height === "100%");
+ok("...with an outer clip box so it is never seen above that line", sheetShell(t33).props.style.overflow === "hidden" && sheetNode(t33).props.style.height === "calc(100% - 24px)", String(sheetNode(t33).props.style.height));
 ok("...whose drop and retract are NOT dropped under reduced motion (the reader wants the movement)", !/prefers-reduced-motion[^}]*\.dqt-sheet-open/.test(sheetCss) && !/@media \(prefers-reduced-motion: reduce\)\{\.dqt-sheet-(open|closing)/.test(sheetCss));
 ok("...while the questions-only cross-fade still honours it", /@media \(prefers-reduced-motion: reduce\)\{\.dqt-mode-out,\.dqt-mode-in\{animation:none\}\}/.test(sheetCss) && !/prefers-reduced-motion[^}]*dqt-sheet-handle/.test(sheetCss));
 // (3) the curtain's own chrome: fewer controls, all of them larger
@@ -3344,8 +3460,13 @@ ok("...whose cross is the docked panel's own, scaled up with the rest", (() => {
   const svg = collect(kids[kids.length - 1], (n) => n.type === "svg")[0];
   return !!svg && svg.props.viewBox === "0 0 24 24" && svg.props.width === 20 && svg.props.strokeWidth === 3.4;
 })() === true);
+ok("...and the settings button's pinwheel scales up with them too", (() => {
+  const btn = collect(chromeNode(t33), (n) => n.props && n.props["data-tool"] === "settings")[0];
+  const svg = btn ? collect(btn, (n) => n.type === "svg")[0] : null;
+  return !!svg && svg.props.viewBox === "0 0 16 16" && svg.props.width === 20;
+})() === true);
 const chromeBtns = collect(chromeNode(t33), (n) => n.type === "button" && n.props.style && n.props.style.width === 32);
-ok("...and larger toolbar buttons (24px -> 32px)", chromeBtns.length >= 4, "buttons=" + chromeBtns.length);
+ok("...and larger toolbar buttons (24px -> 32px), three of them since 0.9.0", chromeBtns.length === 3, "buttons=" + chromeBtns.length);
 ok("the dock toggle is gone on the curtain", !byTitle(t33, "移到左侧")[0] && !byTitle(t33, "移到右侧")[0]);
 ok("...so is the panel's collapse button", !byTitle(t33, "收起")[0]);
 ok("...and the resize strips do not apply here", !byTitle(t33, "拖拽调整宽度")[0] && !byTitle(t33, "拖拽调整高度")[0] && !byTitle(t33, "拖拽同时调整宽高")[0]);
@@ -3370,15 +3491,9 @@ ok("the outline is a centred column with room at both sides", (() => {
   const list = collect(sheetNode(t33), (n) => n.props && n.props.className === "dqt-list")[0];
   return !!list && list.props.style.maxWidth === "90%" && list.props.style.margin === "0 auto" && list.props.style.width === "100%";
 })() === true);
-// the level picker: anchored to the curtain's own toolbar and spread over ONE row
-collect(t33, (n) => n.props && n.props.className === "dqt-levels-btn")[0].props.onClick();
-t33 = render(propsFor(SNAP));
-const curtainPop = collect(chromeNode(t33), (n) => n.props && String(n.props.className || "").includes("dqt-levels-pop"))[0];
-ok("the level picker anchors to the curtain's own toolbar", !!curtainPop && curtainPop.props.style.top === "calc(100% + 8px)" && curtainPop.props.style.left === 0 && curtainPop.props.style.transformOrigin === "16px top");
-const popChips = curtainPop ? collect(curtainPop, (n) => n.type === "button") : [];
-ok("...and spreads H1-H6 across one row", !!curtainPop && curtainPop.props.style.flexWrap === "nowrap" && popChips.length === 6 && popChips.every((c) => c.props.style.flex === "1 1 0" && c.props.style.height === 32), JSON.stringify([curtainPop && curtainPop.props.style.flexWrap, popChips.length]));
-collect(t33, (n) => n.props && n.props.className === "dqt-levels-btn")[0].props.onClick();   // close it again
-t33 = render(propsFor(SNAP));
+// 0.9.0: the curtain's first control is the settings jump — the level picker is
+// gone with its button (the levels are a setting now)
+ok("the curtain's toolbar carries the settings jump", !!collect(chromeNode(t33), (n) => n.props && n.props.className === "dqt-settings-btn")[0]);
 // (4) search is pushed in from the right edge: the outline stays in the middle and
 // slides left, the column carries the panel's own search box over its hits
 searchBtn(t33).props.onClick({ stopPropagation() {} });
@@ -3446,7 +3561,7 @@ ok("...and a docked row goes back to title-over-subtitle (no level chip)", (() =
   const row = collect(findPanel(t33), (n) => n.props && n.props["data-jump-key"])[0];
   return row ? "lineHeight=" + row.props.style.lineHeight + " chips=" + collect(row, (n) => n.props && n.props.style && n.props.style.fontSize === 9.5).length : "no row";
 })());
-sheetBtn(t33).props.onClick();
+topHandle(t33).props.onClick();
 t33 = render(propsFor(SNAP));
 tickTimeouts();   // the panel tucks first, then the curtain drops
 t33 = render(propsFor(SNAP));
@@ -3458,7 +3573,7 @@ t33 = render(propsFor(SNAP));
 ok("a row without a jump key (a group header) closes it too", sheetDom(t33).includes("dqt-sheet-closing"), sheetDom(t33));
 tickTimeouts();
 t33 = render(propsFor(SNAP));
-sheetBtn(t33).props.onClick();
+topHandle(t33).props.onClick();
 t33 = render(propsFor(SNAP));
 tickTimeouts();   // panel tucks, then the curtain drops
 t33 = render(propsFor(SNAP));
@@ -3470,7 +3585,7 @@ t33 = render(propsFor(SNAP));
 ok("...and unmounts after it", !sheetNode(t33));
 drain();   // the panel's return slide is armed one painted frame later
 t33 = render(propsFor(SNAP));
-sheetBtn(t33).props.onClick();
+topHandle(t33).props.onClick();
 t33 = render(propsFor(SNAP));
 tickTimeouts();   // panel tucks, then the curtain drops
 t33 = render(propsFor(SNAP));
@@ -3509,7 +3624,15 @@ press(t33b, "Escape");
 t33b = render(propsFor(SNAP));
 tickTimeouts();
 t33b = render(propsFor(SNAP));
-ok("...and it leaves the collapsed panel exactly as it was", !sheetNode(t33b) && findPanel(t33b).props.style.opacity === 0, String(findPanel(t33b) && findPanel(t33b).props.style.opacity));
+ok("...and it leaves the collapsed panel exactly as it was", (() => {
+  const p = findPanel(t33b);
+  if (sheetNode(t33b) || !p) return false;
+  const w = parseFloat(String(p.props.style.width));
+  const m = /inset\(([^)]*)\)/.exec(String(p.props.style.clipPath));
+  if (!m) return false;
+  const parts = m[1].split(/\s+/).map(parseFloat);
+  return Math.max(parts[1] || 0, parts[3] || 0) >= w;
+})() === true, String(findPanel(t33b) && findPanel(t33b).props.style.clipPath));
 // the real app keeps the 对话/轨迹/上下文 tabs inside the conversation scroll
 // container: the curtain (and its handle) must hang from BELOW them
 TABLIST = liveTablist;
@@ -3711,8 +3834,9 @@ ok("...landing on the bottom of that turn's last message (the model's reply)",
   String(scrollport.scrollTop) + " (its message ends at 4400; 4400 - 600 + 28 = 3828)");
 Date.now = realNow35c;
 CONV_ROWS = [];
-// ...and the curtain's rows carry the same control
-collect(t35, (n) => n.props && n.props.className === "dqt-sheet-btn")[0].props.onClick();
+// ...and the curtain's rows carry the same control (the top handle opens the curtain:
+// the toolbar's own curtain button is gone)
+topHandle(t35).props.onClick();
 t35 = render(propsFor(SNAP));
 tickTimeouts();   // the panel tucks, then the curtain drops
 t35 = render(propsFor(SNAP));
@@ -3736,51 +3860,34 @@ const iconOf = (cls) => {
   const btn = collect(tIcons, (n) => n.props && n.props.className === cls)[0];
   return btn ? collect(btn, (n) => n.type === "svg")[0] : null;
 };
-// the docked header's own ✕ (no class of its own — it is the button titled 收起) plus the four
+// the docked header's own ✕ (no class of its own — it is the button titled 收起) plus the two
 // classed ones; the curtain's ✕ only exists once the curtain is open, so it is checked there
 const dockCrossSvg = (() => {
   const btn = byTitle(tIcons, "收起")[0];
   return btn ? collect(btn, (n) => n.type === "svg")[0] : null;
 })();
-const badges = ["dqt-levels-btn", "dqt-questions-btn", "dqt-search-btn", "dqt-sheet-btn"];
+const badges = ["dqt-settings-btn", "dqt-search-btn"];
 ok("round toolbar icons sit centred by geometry (no transform nudge on any of them)",
   badges.every((c) => { const s = iconOf(c); return !!s && !(s.props.style && s.props.style.transform); })
   && !!dockCrossSvg && !(dockCrossSvg.props.style && dockCrossSvg.props.style.transform),
   JSON.stringify(badges.map((c) => [c, !!(iconOf(c))])).concat([["dockCross", !!dockCrossSvg]]));
 
-// The curtain button: a full-height surface with the arrow dropping out of its TOP edge.
-const sheetSvg = iconOf("dqt-sheet-btn");
-const sheetRect = collect(sheetSvg, (n) => n.type === "rect")[0];
-const sheetPath = collect(sheetSvg, (n) => n.type === "path")[0];
-const sr = sheetRect.props;
-ok("the curtain button's rectangle is 12 x 9 (neither a slab nor a flat strip), centred in its 14 box",
-  Math.abs(sr.width - 12) < 0.3 && Math.abs(sr.height - 9) < 0.3
-  && Math.abs((sr.x + sr.width / 2) - 7) < 0.6 && Math.abs((sr.y + sr.height / 2) - 7) < 0.6,
-  JSON.stringify([sr.x, sr.y, sr.width, sr.height]));
-ok("...whose frame is as heavy as the questions bubble's, while the arrow keeps the lighter weight",
-  sheetRect.props.strokeWidth === 2.2 && sheetSvg.props.strokeWidth === 1.8
-  && iconOf("dqt-questions-btn").props.strokeWidth === 2.2,
-  JSON.stringify([sheetRect.props.strokeWidth, sheetSvg.props.strokeWidth, iconOf("dqt-questions-btn").props.strokeWidth]));
-const mArrow = /^M7 ([\d.]+)V([\d.]+)M([\d.]+) ([\d.]+)L7 ([\d.]+)/.exec(String(sheetPath.props.d));
-ok("...and its arrow hangs DOWN with the tail starting exactly on that rectangle's top edge",
-  !!mArrow && Number(mArrow[1]) === sr.y && Number(mArrow[2]) > Number(mArrow[1]) && Number(mArrow[5]) > Number(mArrow[4]),
-  String(sheetPath.props.d) + " rectY=" + sr.y);
-
-// The two lines the reader asked to be heavier.
-ok("the level filter's three lines are heavier than the curtain outline",
-  iconOf("dqt-levels-btn").props.strokeWidth === 2.2 && sheetSvg.props.strokeWidth === 1.8,
-  JSON.stringify([iconOf("dqt-levels-btn").props.strokeWidth, sheetSvg.props.strokeWidth]));
-ok("...and so is the questions bubble's own outline",
-  iconOf("dqt-questions-btn").props.strokeWidth === 2.2,
-  String(iconOf("dqt-questions-btn").props.strokeWidth));
-const qRect = iconOf("dqt-questions-btn").props.children[0].props;
-const qTail = String(iconOf("dqt-questions-btn").props.children[1].props.d);
-const qTailBottom = Number(/v([\d.]+)/.exec(qTail)[1]) + qRect.y + qRect.height;
-ok("...with a slightly larger bubble that sits a touch LOW on purpose (the tail would make a centred bubble read top-heavy)",
-  qRect.width >= 11.2 && qRect.height >= 7.6
-  && Math.abs((qRect.x + qRect.width / 2) - 7) < 0.3
-  && (qRect.y + qTailBottom) / 2 > 7,
-  JSON.stringify([qRect.x, qRect.y, qRect.width, qRect.height, qTail, (qRect.y + qTailBottom) / 2]));
+// 0.9.0: the settings button carries a pinwheel glyph (a 16-unit box at 1.8
+// stroke) drawn at the same icon size as every other toolbar button — 15px in
+// the docked header, 20px on the curtain's larger chrome
+const settingsSvg = iconOf("dqt-settings-btn");
+const petalDs = settingsSvg ? collect(settingsSvg, (n) => n.type === "path").map((p) => String(p.props.d)) : [];
+ok("the settings button carries the pinwheel glyph (four arcs in a 16 box at 1.8 stroke)",
+  !!settingsSvg && settingsSvg.props.viewBox === "0 0 16 16" && settingsSvg.props.width === 15
+  && settingsSvg.props.strokeWidth === 1.8 && petalDs.length === 4,
+  JSON.stringify([settingsSvg && settingsSvg.props.viewBox, settingsSvg && settingsSvg.props.width, settingsSvg && settingsSvg.props.strokeWidth, petalDs.length]));
+ok("...with the pinwheel's exact four arcs", petalDs[0] === "M7.84457 5.06199C11.6605 4.93876 14.7962 6.14848 14.8484 7.76397C14.8875 8.97461 13.1838 10.0696 10.7215 10.5942"
+  && petalDs[3] === "M10.7476 7.89535C10.8708 11.7113 9.66109 14.847 8.0456 14.8991C6.83496 14.9382 5.74 13.2346 5.21536 10.7723",
+  JSON.stringify([petalDs[0], petalDs[3]]));
+// the toolbar lost two buttons in 0.9.0: the questions-only toggle moved into the
+// search row and the curtain button left to the top handle
+ok("the toolbar no longer carries a questions-only or a curtain button",
+  !iconOf("dqt-questions-btn") && !iconOf("dqt-sheet-btn"), "gone");
 store.clear(); resetComponent();
 console.log("--- scenario 12y: curtain bottom pin + the two floating buttons (0.7.1) ---");
 store.clear(); resetComponent();
@@ -3819,7 +3926,7 @@ const lPin = listOf(tPin);
 lPin.scrollTop = 2000;                                  // parked at the bottom (scrollHeight 1000+)
 lPin.props.onScroll({ currentTarget: lPin });
 floatingOf(tPin, "dqt-bottom-btn");
-sheetBtn(tPin).props.onClick();                          // drop the curtain
+topHandle(tPin).props.onClick();                             // drop the curtain (top handle)
 tickTimeouts();
 let tPin2 = render(propsFor(SNAP));
 ok("opening the curtain leaves a reader who is at the newest turn exactly there",
@@ -4014,7 +4121,7 @@ tPS = render(propsFor(SNAP));
 lPS.scrollTop = 500;                                     // the list is somewhere else again
 byTitle(tPS, "展开大纲")[0].props.onClick();              // the reader opens the PANEL: arms row 5
 tPS = render(propsFor(SNAP));
-sheetBtn(tPS).props.onClick();                           // ...then hands over to the curtain
+topHandle(tPS).props.onClick();                             // ...then hands over to the curtain (top handle)
 tPS = render(propsFor(SNAP));
 tickTimeouts();                                          // (the panel tucks first)
 tPS = render(propsFor(SNAP));
@@ -4276,6 +4383,101 @@ tickIntervals();
 tNarrow = render(propsFor(SNAP));
 ok("widening the window brings the side handle back", pillIn(tNarrow).props.style.pointerEvents === "auto", String(pillIn(tNarrow).props.style.pointerEvents));
 store.clear(); resetComponent();
+
+console.log("--- scenario 30 (0.9.0): search history, outline density, long-list rendering ---");
+// B4: a committed search comes back as one-tap chips while the box is empty
+store.clear(); resetComponent();
+const histStrip = (t) => collect(t, (n) => n.props && n.props["data-dqt-hist"] === "1")[0];
+let thist = openSearch(propsFor(SNAP));
+searchBox(thist).props.onChange({ target: { value: "标题" } });
+thist = render(propsFor(SNAP));
+searchBox(thist).props.onKeyDown({ key: "Enter" });
+thist = render(propsFor(SNAP));
+ok("an empty search box offers no history yet", !histStrip(thist), `strip=${!!histStrip(thist)}`);
+searchBox(thist).props.onChange({ target: { value: "" } });
+thist = render(propsFor(SNAP));
+ok("a committed search is offered back on an empty box", !!histStrip(thist) && textOf(histStrip(thist)).includes("标题"), textOf(thist).slice(0, 140));
+ok("...labelled 最近搜索 with a clear control", textOf(thist).includes("最近搜索") && !!collect(thist, (n) => n.props && n.props["data-dqt-hist-clear"] === "1")[0]);
+const histChip = (t, i) => collect(t, (n) => n.props && n.props["data-dqt-hist-item"] === i)[0];
+histChip(thist, 0).props.onClick();
+thist = render(propsFor(SNAP));
+ok("one tap on a chip puts the query back in the box", searchBox(thist).props.value === "标题", String(searchBox(thist).props.value));
+ok("...and the strip stands down while the box has text", !histStrip(thist), `strip=${!!histStrip(thist)}`);
+// re-committing the same query keeps ONE entry; newer entries come first
+searchBox(thist).props.onKeyDown({ key: "Enter" });
+thist = render(propsFor(SNAP));
+searchBox(thist).props.onChange({ target: { value: "第二个" } });
+thist = render(propsFor(SNAP));
+searchBox(thist).props.onKeyDown({ key: "Enter" });
+thist = render(propsFor(SNAP));
+searchBox(thist).props.onChange({ target: { value: "" } });
+thist = render(propsFor(SNAP));
+ok("history is newest-first with no duplicates",
+  !!histChip(thist, 0) && !!histChip(thist, 1) && textOf(histChip(thist, 0)).includes("第二个") && textOf(histChip(thist, 1)).includes("标题") && !histChip(thist, 2),
+  JSON.stringify([0, 1, 2].map((i) => histChip(thist, i) && textOf(histChip(thist, i)))));
+ok("...and the browser remembers it too", String(store.get("dsh-quick-toc.searchHist.v1") || "").includes("第二个"), String(store.get("dsh-quick-toc.searchHist.v1")));
+collect(thist, (n) => n.props && n.props["data-dqt-hist-clear"] === "1")[0].props.onClick();
+thist = render(propsFor(SNAP));
+ok("clearing empties the strip and the stored list", !histStrip(thist) && store.get("dsh-quick-toc.searchHist.v1") == null, String(store.get("dsh-quick-toc.searchHist.v1")));
+
+// B5: outline density — comfy keeps the current rhythm, compact tightens it
+store.clear(); resetComponent();
+let tdense = render(propsFor(SNAP));
+const grpBox = (t, i) => collect(t, (n) => n.props && n.props["data-group-idx"] === i)[0];
+const groupHeaderRows = (t, h) => collect(t, (n) => n.props && n.props.style && n.props.style.height === h);
+const headerLabelOf = (t, h) => collect(groupHeaderRows(t, h)[0], (n) => n.props && n.props["data-nav-row"] === "1")[0];
+const denseRowOf = (t) => collect(t, (n) => n.props && n.props["data-jump-key"] && n.props.style && n.props.style.lineHeight === "16px")[0];
+ok("comfy (the default) keeps the roomy group rhythm", grpBox(tdense, 0).props.style.margin === "2px -5px" && groupHeaderRows(tdense, 18).length === 4,
+  JSON.stringify([grpBox(tdense, 0).props.style.margin, groupHeaderRows(tdense, 18).length]));
+// the fixed-size furniture must fit its row in BOTH densities (0.9.0 regression:
+// the label outgrew its band and the 20px end control was cut by the clipped
+// 16px row — both read as a grey background with its edges chopped off)
+ok("comfy keeps the 20px end control and the inherited label rhythm",
+  endBtnOf(tdense).props.style.width === 20 && headerLabelOf(tdense, 18).props.style.lineHeight === undefined,
+  JSON.stringify([endBtnOf(tdense).props.style.width, headerLabelOf(tdense, 18).props.style.lineHeight]));
+// B6: every group box skips rendering while it is offscreen (DOM stays in place)
+ok("long lists are virtualized per group (offscreen groups skip rendering)",
+  grpBox(tdense, 0).props.style.contentVisibility === "auto" && String(grpBox(tdense, 0).props.style.containIntrinsicSize) === "auto 96px",
+  JSON.stringify([grpBox(tdense, 0).props.style.contentVisibility, grpBox(tdense, 0).props.style.containIntrinsicSize]));
+resetComponent();
+setHostField("density", "compact");
+tdense = render(propsFor(SNAP));
+ok("compact tightens the group boxes", grpBox(tdense, 0).props.style.margin === "0 -5px", String(grpBox(tdense, 0).props.style.margin));
+ok("...the group headers (18 -> 15)", groupHeaderRows(tdense, 15).length === 4 && groupHeaderRows(tdense, 18).length === 0,
+  JSON.stringify([groupHeaderRows(tdense, 15).length, groupHeaderRows(tdense, 18).length]));
+const denseRows = collect(tdense, (n) => n.props && n.props["data-jump-key"] && n.props.style && n.props.style.lineHeight === "16px").length;
+ok("...and the outline rows (18px -> 16px lines)", denseRows > 0, `dense rows=${denseRows}`);
+// compact must fit its furniture too: the label sits INSIDE its 15px band (the
+// background riding on it was cut to the band before) and the end control
+// scales down so the clipped row never chops its round backdrop
+ok("compact keeps the header label inside its band (13px line in a 15px row)",
+  headerLabelOf(tdense, 15).props.style.lineHeight === "13px", String(headerLabelOf(tdense, 15).props.style.lineHeight));
+ok("...and the end control scales down so the row never cuts it",
+  endBtnOf(denseRowOf(tdense)).props.style.width === 16 && endBtnOf(tdense).props.style.width === 16,
+  JSON.stringify([endBtnOf(denseRowOf(tdense)).props.style.width, endBtnOf(tdense).props.style.width]));
+// 0.9.0 regression: while a surface animates the virtualization is held back —
+// a compositor-driven slide never re-evaluates the skip state on its own, so an
+// opening panel stayed blank and the text only popped in when it landed
+byTitle(tdense, "展开大纲")[0].props.onClick();
+tdense = render(propsFor(SNAP));
+ok("opening the panel holds the virtualization back so the list keeps painting",
+  grpBox(tdense, 0).props.style.contentVisibility === "visible", String(grpBox(tdense, 0).props.style.contentVisibility));
+tickTimeouts();
+tdense = render(propsFor(SNAP));
+ok("...and the skip re-arms once the animation window is over",
+  grpBox(tdense, 0).props.style.contentVisibility === "auto", String(grpBox(tdense, 0).props.style.contentVisibility));
+ok("...while the virtualization stays on with its tighter estimate",
+  grpBox(tdense, 0).props.style.contentVisibility === "auto" && String(grpBox(tdense, 0).props.style.containIntrinsicSize) === "auto 80px",
+  String(grpBox(tdense, 0).props.style.containIntrinsicSize));
+// the card offers the same switch
+let cd = renderCard();
+if (!collect(cd, (n) => n.props && n.props.className === "dqt-pbody").length) { cardHead(cd).props.onClick({}); cd = renderCard(); }
+ok("the card carries the density row", textOf(cd).includes("大纲密度"), textOf(cd).slice(0, 200));
+ok("...with 标准 / 紧凑 as the two choices", !!cardBtn(cd, "标准") && !!cardBtn(cd, "紧凑"));
+ok("...and 紧凑 is the one now written to the host document", hostValue.density === "compact", String(hostValue.density));
+cardBtn(cd, "标准").props.onClick();
+ok("picking 标准 clears the customization (the default never pins an entry)", !("density" in hostValue) && !("density" in hostUser), JSON.stringify([hostValue.density, Object.keys(hostUser)]));
+resetHost(); store.clear(); resetComponent();
 
 /* ------------------------------------------------------------------ manifest guard
  * The declared host range is what DSH's plugin-compatibility preflight reads before it imports
