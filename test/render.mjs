@@ -740,6 +740,13 @@ document.querySelectorAll = realQsa;
 ok("a session titled like the plugin is never clicked as its settings entry",
   sessionRow.clicks === 0 && innerRowButton.clicks === 0,
   "row=" + sessionRow.clicks + " inner=" + innerRowButton.clicks);
+// the plugins page must carry NO Official-group seat for this plugin: that slot
+// renders in the official plugins' group and this is not one — the complete card
+// lives on the package's own page in the Installed group instead
+ok("no Official-group seat is registered (the item slot stays gone)", !src.includes('"plugins.item"'), "plugins.item registered in the source");
+const zhLocale = JSON.parse(readFileSync(new URL("../locale/zh.json", import.meta.url), "utf8"));
+const enLocale = JSON.parse(readFileSync(new URL("../locale/en.json", import.meta.url), "utf8"));
+ok("the Installed card's own texts ship with the package", zhLocale.meta && zhLocale.meta.title === "对话大纲" && /设置/.test(zhLocale.meta.description) && enLocale.meta && enLocale.meta.title === "Conversation Outline" && /settings/.test(enLocale.meta.description), JSON.stringify([zhLocale.meta, enLocale.meta]));
 // the level set is a setting (the card owns it now); the outline obeys whatever
 // combination it carries — arbitrary subsets, not level prefixes
 store.clear(); resetComponent();

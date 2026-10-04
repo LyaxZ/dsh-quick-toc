@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.9.1] - 2026-10-03
+
+### Fixed
+- **The settings entry sat in the Official group**: the Plugins page listed this plugin's settings entry among the official plugins. The complete settings now live on this plugin's own card in the Installed group, the official group no longer shows this plugin, and the card's title and description ship with the package.
+
 ## [0.9.0] - 2026-10-03
 
 ### Added
