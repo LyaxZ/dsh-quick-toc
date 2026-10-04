@@ -1,6 +1,6 @@
 {
   "name": "dsh-quick-toc",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Conversation TOC for DeepSeek Harness (DSH): a whole-session, turn-grouped Markdown outline with hover previews, heading-level preferences, a full-width curtain, jump-to-end buttons, title/prompts/full-text/cross-session search and a Chinese/English interface.",
   "type": "module",
   "main": "lib/index.js",

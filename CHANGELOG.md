@@ -2,6 +2,11 @@
 
 **dsh-quick-toc** 的重要变更都记录在这里。英文版见 [CHANGELOG.en.md](CHANGELOG.en.md)。
 
+## [0.9.2] - 2026-10-04
+
+### 变更
+- **已安装卡片只显示包名**：插件卡片的名称此前只显示包名。现在显示为「对话大纲（dsh-quick-toc）」，界面为英文时显示「Conversation Outline (dsh-quick-toc)」。
+
 ## [0.9.1] - 2026-10-03
 
 ### 修复

@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.9.2] - 2026-10-04
+
+### Changed
+- **The card showed the package name only**: the installed card's name line showed just the package name. It now reads "对话大纲（dsh-quick-toc）", or "Conversation Outline (dsh-quick-toc)" in an English interface.
+
 ## [0.9.1] - 2026-10-03
 
 ### Fixed
