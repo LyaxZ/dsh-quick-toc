@@ -854,6 +854,12 @@ ok("html-ish + inline markdown in headings does not throw", (() => { try { retur
 /* ------------------------------------------------- scenario 7: interactions */
 const findPanel = (t) => collect(t, (n) => n.props && n.props.style && n.props.style.position === "fixed" && n.props.style.display === "flex" && n.props.style.clipPath !== undefined)[0];
 const px = (v) => parseFloat(String(v));
+const insetWidth = (clip, width) => {
+  const m = /inset\(([^)]*)\)/.exec(String(clip || ""));
+  if (!m) return NaN;
+  const p = m[1].split(/\s+/).map(parseFloat);
+  return width - (p[1] || 0) - (p[3] || 0);
+};
 const counter = (t) => collect(t, (n) => n.props && typeof n.props.children === "string" && /^\d+\/\d+$/.test(n.props.children)).map((n) => n.props.children)[0];
 const activeRowTitle = (t) => collect(t, (n) => n.props && n.props.style && n.props.style.background === CHIP && n.props.style.cursor === "pointer" && typeof n.props.onClick === "function").map((n) => n.props.title).join("|");
 
@@ -881,9 +887,10 @@ const closedTransition = panel.props.style.transition;
 const collapsedLeft = panelX(panel);
 const collapseLine = 1400 - (100 + 48); // innerWidth - (viewport.right + 48)
 ok("right dock collapsed: clip hides exactly the panel width", panel.props.style.clipPath === `inset(0 ${panelW0}px 0 0)`, panel.props.style.clipPath);
-ok("right dock collapsed: no shadow floats while the panel is away", (() => {
+ok("right dock collapsed: the shadow clip has no visible width at rest", (() => {
   const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
-  return !!sh && sh.props.style.clipPath === `inset(-24px ${panelW0 - 8}px -24px -24px)`;
+  return !!sh && sh.props.style.clipPath === `inset(-24px ${panelW0 - 8}px -24px 8px)`
+    && insetWidth(sh.props.style.clipPath, panelW0) <= 0;
 })() === true);
 ok("right dock collapsed: left sits on the collapse line", Math.abs(collapsedLeft - collapseLine) < 0.5, `left=${collapsedLeft} line=${collapseLine}`);
 byTitle(tree, "展开大纲")[0].props.onClick({});
@@ -915,6 +922,11 @@ store.clear(); resetComponent();
 store.set("dsh-quick-toc.dock.v2", "left");
 resetComponent();
 tree = render(propsFor(SNAP));
+const leftClosedPanel = findPanel(tree);
+const leftClosedShadow = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+const leftClosedWidth = px(leftClosedPanel.props.style.width);
+ok("left dock collapsed: the panel body is fully clipped", insetWidth(leftClosedPanel.props.style.clipPath, leftClosedWidth) <= 0, String(leftClosedPanel.props.style.clipPath));
+ok("left dock collapsed: the shadow clip has no visible width at rest", !!leftClosedShadow && insetWidth(leftClosedShadow.props.style.clipPath, leftClosedWidth) <= 0, String(leftClosedShadow && leftClosedShadow.props.style.clipPath));
 byTitle(tree, "展开大纲")[0].props.onClick({});
 tree = render(propsFor(SNAP));
 const leftPanel = findPanel(tree);

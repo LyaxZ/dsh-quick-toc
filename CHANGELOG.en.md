@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.9.4] - 2026-10-12
+
+### Fixed
+- **An edge remained visible after collapse**: a small part of the panel or its shadow could remain visible at the dock edge after collapsing. The panel and its shadow now disappear together at the dock edge.
+
 ## [0.9.3] - 2026-10-04
 
 ### Changed
