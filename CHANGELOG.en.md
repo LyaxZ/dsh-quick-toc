@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.9.5] - 2026-10-16
+
+### Changed
+- **Supports DSH 0.2.1-alpha.3, alpha.4 and alpha.5**: no plugin code changed; the compatibility declaration registers the three new prereleases. Tested item by item in an isolated environment (a clean host start, a single entry in the configuration, the plugin-page groups and the card's name and description, the toolbar settings button landing on the card's settings page, the four search scopes and the search-history strip, no console errors).
+
 ## [0.9.4] - 2026-10-12
 
 ### Fixed
