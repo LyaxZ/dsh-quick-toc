@@ -225,6 +225,10 @@ globalThis.NodeFilter = { SHOW_TEXT: 4 };
 // assert real CSS (keyframes, reduced-motion fallbacks), not just inline styles
 const headStyles = [];
 const cssText = () => headStyles.map((n) => n.textContent || "").join("\n");
+// the plugin asks the engine whether backdrop-filter exists; the harness says yes
+// so the translucent paths are the ones under test (scenario 24c turns them off
+// through the card, which is the real switch)
+globalThis.CSS = { supports: () => true };
 globalThis.document = {
   body: fakeEl({ dataset: {} }),
   documentElement: fakeEl(),
@@ -666,7 +670,12 @@ ok("a round settings button sits in the header", !!settingsBtn(tree) && settings
 ok("the settings button is round with a corner-shape override", settingsBtn(tree).props.style.borderRadius === "50%" && settingsBtn(tree).props.style.cornerShape === "round");
 ok("no level picker remains in the toolbar", collect(tree, (n) => n.props && String(n.props.className || "").includes("dqt-levels-pop")).length === 0);
 ok("no folding controls remain anywhere", !textOf(tree).includes("全折叠") && !textOf(tree).includes("全展开") && !textOf(tree).includes("▾") && !textOf(tree).includes("▸"), "text: " + textOf(tree).slice(0, 120));
-ok("sticky group header rendered", collect(tree, (n) => n.props && n.props.style && n.props.style.position === "sticky").length >= 1);
+// the group label row is the box that owns the clickable label ([data-nav-row])
+const groupHead = (t) => collect(t, (n) => n.props && Array.isArray(n.props.children)
+  && n.props.children.some((c) => c && c.props && c.props["data-nav-row"] === "1"))[0];
+ok("the group label scrolls with the list (one transparency, no opaque band)",
+  !!groupHead(tree) && groupHead(tree).props.style.position === "relative" && groupHead(tree).props.style.background === "transparent",
+  JSON.stringify(groupHead(tree) && [groupHead(tree).props.style.position, groupHead(tree).props.style.background]));
 ok("heading text 总览 present", textOf(tree).includes("总览"), "text: " + textOf(tree).slice(0, 160));
 ok("deep heading 更深一层 present with all levels on", textOf(tree).includes("更深一层"), "text: " + textOf(tree).slice(0, 160));
 ok("turn time shown (HH:MM)", /\d{2}:\d{2}/.test(textOf(tree)));
@@ -747,6 +756,9 @@ ok("no Official-group seat is registered (the item slot stays gone)", !src.inclu
 const zhLocale = JSON.parse(readFileSync(new URL("../locale/zh.json", import.meta.url), "utf8"));
 const enLocale = JSON.parse(readFileSync(new URL("../locale/en.json", import.meta.url), "utf8"));
 ok("the Installed card's own texts ship with the package", zhLocale.meta && zhLocale.meta.title === "对话大纲（dsh-quick-toc）" && /设置/.test(zhLocale.meta.description) && enLocale.meta && enLocale.meta.title === "Conversation Outline (dsh-quick-toc)" && /settings/.test(enLocale.meta.description), JSON.stringify([zhLocale.meta, enLocale.meta]));
+const iconSvg = readFileSync(new URL("../icon.svg", import.meta.url), "utf8");
+const iconPkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+ok("the Installed card's icon ships with the package", iconPkg.icon === "./icon.svg" && iconPkg.files.includes("icon.svg") && Buffer.byteLength(iconSvg, "utf8") <= 262144 && /<svg[^>]*viewBox="0 0 36 36"/.test(iconSvg) && !/href="https?:|<image|url\(http|@import|<script/i.test(iconSvg.replace(/xmlns="[^"]*"/, "")), iconPkg.icon + " / " + Buffer.byteLength(iconSvg, "utf8") + " B");
 // the level set is a setting (the card owns it now); the outline obeys whatever
 // combination it carries — arbitrary subsets, not level prefixes
 store.clear(); resetComponent();
@@ -1439,9 +1451,10 @@ CONV_ROWS = []; scrollport.scrollTo = () => {};
 store.clear(); resetComponent();
 tree = render(propsFor(SNAP));
 const listEl = collect(tree, (n) => n.props && n.props.className === "dqt-list")[0];
-ok("the outline scroller has no top padding (sticky row sits flush)", String(listEl.props.style.padding).startsWith("0 "), String(listEl.props.style.padding));
-const stickyEl = collect(tree, (n) => n.props && n.props.style && n.props.style.position === "sticky")[0];
-ok("the group header is pinned at top 0", stickyEl.props.style.top === 0 && stickyEl.props.style.zIndex === 2);
+ok("the outline scroller keeps no top padding", String(listEl.props.style.padding).startsWith("0 "), String(listEl.props.style.padding));
+const plainHead = groupHead(tree);
+ok("...and the label is a plain row now (no pinning, no fill)",
+  !!plainHead && plainHead.props.style.position === "relative" && plainHead.props.style.background === "transparent");
 
 SCROLL = { heads: [], rows: new Map(), top: 0 };
 store.clear(); resetComponent();
@@ -2074,14 +2087,30 @@ const TINT = "rgba(79, 140, 255, 0.10)";
 const EDGE = "rgba(79, 140, 255, 0.85)";
 const EDGE_SOFT = "rgba(79, 140, 255, 0.35)";
 ok("the followed group is marked by colour, not by fading the others away", activeGi2.props.style.backgroundColor === TINT, String(activeGi2.props.style.backgroundColor));
+// H: the bar is its own layer (a gradient cannot be a border colour, and
+// border-image would ignore the radius and paint all four sides)
+const barLayerIn = (wrapper) => collect(wrapper, (n) => n.props && n.props.style
+  && n.props.style.width === 5 && typeof n.props.style.background === "string"
+  && n.props.style.background.indexOf("linear-gradient") === 0)[0];
 ok("...and the block is CLOSED on every side (fill + outline + accent bar)",
   activeGi2.props.style.borderTop === "1px solid " + EDGE_SOFT &&
   activeGi2.props.style.borderRight === "1px solid " + EDGE_SOFT &&
   activeGi2.props.style.borderBottom === "1px solid " + EDGE_SOFT &&
-  activeGi2.props.style.borderLeft === "3px solid " + EDGE,
-  JSON.stringify({ t: activeGi2.props.style.borderTop, r: activeGi2.props.style.borderRight, b: activeGi2.props.style.borderBottom, l: activeGi2.props.style.borderLeft }));
+  activeGi2.props.style.paddingLeft === 7 &&
+  !!barLayerIn(activeGi2) && barLayerIn(activeGi2).props.style.opacity === 1 &&
+  barLayerIn(activeGi2).props.style.background.indexOf(EDGE) > 0 &&
+  barLayerIn(activeGi2).props.style.background.indexOf(EDGE_SOFT) > 0,
+  JSON.stringify({ t: activeGi2.props.style.borderTop, pad: activeGi2.props.style.paddingLeft, bar: barLayerIn(activeGi2) && barLayerIn(activeGi2).props.style.background }));
+ok("...and the bar is a gradient, softened toward the bottom", (() => {
+  const b = barLayerIn(activeGi2);
+  return !!b && /^linear-gradient\(to bottom, /.test(String(b.props.style.background)) &&
+    /opacity 0\.4s/.test(String(b.props.style.transition));
+})(), barLayerIn(activeGi2) && barLayerIn(activeGi2).props.style.background);
 ok("the box FADES in and out (colour transitions only)", /background-color 0\.4s/.test(activeGi2.props.style.transition) && /border-color 0\.4s/.test(activeGi2.props.style.transition), activeGi2.props.style.transition);
-ok("the accent keeps its 3px width while inactive (activating never reflows rows)", String(sameLevel.props.style.borderLeft).startsWith("3px solid") && /transparent/.test(String(sameLevel.props.style.borderLeft)), String(sameLevel.props.style.borderLeft));
+ok("the bar keeps its 3px slot while inactive (activating never reflows rows)",
+  sameLevel.props.style.paddingLeft === 7 && sameLevel.props.style.borderTop === "1px solid transparent" &&
+  !!barLayerIn(sameLevel) && barLayerIn(sameLevel).props.style.opacity === 0,
+  JSON.stringify([sameLevel.props.style.paddingLeft, barLayerIn(sameLevel) && barLayerIn(sameLevel).props.style.opacity]));
 const tintLayerIn = (wrapper) => collect(wrapper, (n) => n.props && n.props.style && n.props.style.position === "absolute" && n.props.style.background === TINT)[0];
 ok("the pinned group header fades its tint on its own layer (a gradient cannot transition)",
   tintLayerIn(activeGi2) && tintLayerIn(activeGi2).props.style.opacity === 1 && /opacity 0\.4s/.test(tintLayerIn(activeGi2).props.style.transition) && tintLayerIn(sameLevel).props.style.opacity === 0,
@@ -2674,13 +2703,13 @@ collect(c24, (n) => {
   if (n.type === "p" && n.props.className === "dqt-phint") inlineOrder.push("hint");
 });
 ok("the language options sit on the label's row (control before the hint)", inlineOrder[0] === "btn" && inlineOrder[1] === "hint", inlineOrder.join(","));
-ok("...and the joined segments are inline (language, dock, density + the on/off rows: fuzzy, hover, remember, auto-load, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 8, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
+ok("...and the joined segments are inline (language, dock, density, glass + the on/off rows: fuzzy, hover, remember, auto-load, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 9, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
 ok("...the level chips keep their own row style", collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length === 1, String(collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length));
 ok("...with the three language choices", ["跟随宿主", "中文", "English"].every((s) => textOf(c24).includes(s)));
 ok("...the six level chips on by default", [1, 2, 3, 4, 5, 6].every((lv) => collect(c24, (n) => n.props && n.props.children === "H" + lv && typeof n.props.onClick === "function").length === 1));
-ok("...and the five boolean rows read 开启/关闭 (no checkboxes)",
+ok("...and the six boolean rows read 开启/关闭 (no checkboxes)",
   collect(c24, (n) => n.type === "input" && n.props.type === "checkbox").length === 0 &&
-  ["开启", "关闭"].every((s) => collect(c24, (n) => n.props && n.props.children === s && typeof n.props.onClick === "function").length === 5),
+  ["开启", "关闭"].every((s) => collect(c24, (n) => n.props && n.props.children === s && typeof n.props.onClick === "function").length === 6),
   "on/off buttons: " + collect(c24, (n) => n.props && (n.props.children === "开启" || n.props.children === "关闭")).length);
 ok("...and the reading-position row is one of them", textOf(c24).includes("记住阅读位置"));
 ok("...and so is the auto-load row (on by default)", textOf(c24).includes("自动加载历史"));
@@ -2706,7 +2735,7 @@ const cardButtons24 = () => collect(c24, (n) => n.type === "button" && typeof n.
 const cardSliders24 = () => collect(c24, (n) => n.type === "input" && n.props.type === "range");
 ok("a read-only host disables the controls and says so",
   cardButtons24().length > 0 && cardButtons24().every((n) => n.props.disabled === true) &&
-  cardSliders24().length === 3 && cardSliders24().every((n) => n.props.disabled === true) && textOf(c24).includes("无法写入"),
+  cardSliders24().length === 4 && cardSliders24().every((n) => n.props.disabled === true) && textOf(c24).includes("无法写入"),
   "buttons: " + cardButtons24().length + ", sliders: " + cardSliders24().length + ", disabled: " + cardSliders24().map((n) => String(n.props.disabled)).join(","));
 hostWritable = true;
 pingScope();
@@ -2799,6 +2828,92 @@ ok("...and going back to 100% clears that customization as well",
   JSON.stringify([hostValue.sheetZoom, sz2 && sz2.props.value]));
 store.clear(); resetComponent();
 
+console.log("--- scenario 24b: theme colour ---");
+store.clear(); resetComponent();
+let tAcc = renderCard();
+cardHead(tAcc).props.onClick({});
+tAcc = renderCard();
+const hasDot = (n) => n.props && String(n.props.className || "").split(/\s+/).indexOf("dqt-dot") >= 0;
+const dotsOf = (t) => collect(t, hasDot);
+const dotByName = (t, name) => collect(t, (n) => hasDot(n) && n.props.title === name)[0];
+ok("the card has a theme-colour row with six dots", textOf(tAcc).includes("主题色") && dotsOf(tAcc).length === 6,
+  "dots: " + dotsOf(tAcc).length);
+ok("...labelled in the reader's language, blue ringed by default",
+  ["蓝色", "红色", "黄色", "绿色", "紫色", "粉色"].every((s) => !!dotByName(tAcc, s)) &&
+  dotByName(tAcc, "蓝色").props.className === "dqt-dot dqt-dotOn" &&
+  dotByName(tAcc, "红色").props.style.background === "#F5484D",
+  dotsOf(tAcc).map((n) => n.props.title + "=" + (n.props.className.includes("dqt-dotOn") ? "on" : "off")).join(","));
+dotByName(tAcc, "红色").props.onClick({});
+tAcc = renderCard();
+ok("picking red writes the host document and rings the red dot",
+  hostValue.accent === "red" && dotByName(tAcc, "红色").props.className === "dqt-dot dqt-dotOn" &&
+  dotByName(tAcc, "蓝色").props.className === "dqt-dot",
+  JSON.stringify(hostValue.accent));
+dotByName(tAcc, "蓝色").props.onClick({});
+tAcc = renderCard();
+ok("...and picking blue (the default) unpins the field again",
+  !("accent" in hostValue) && !("accent" in hostUser) && dotByName(tAcc, "蓝色").props.className === "dqt-dot dqt-dotOn",
+  JSON.stringify([hostValue.accent, Object.keys(hostUser)]));
+// the panel follows: a followed group wears the theme's tint + bar
+store.clear(); resetComponent();
+let tAccP = render(propsFor(SNAP));
+const anchorRow2 = (key, top, bottom) => { const r = elem("div", { dataset: { chatAnchorKey: key }, getBoundingClientRect: () => ({ top: top, left: 0, right: 600, bottom: bottom, width: 600, height: bottom - top }) }); r.closest = () => scrollport; return r; };
+SCROLL.rows = new Map([["u3", anchorRow2("u3", 40, 120)], ["a3", anchorRow2("a3", 140, 300)]]);
+fireDocument("scroll", {});
+tAccP = render(propsFor(SNAP));
+const gAccBlue = collect(tAccP, (n) => n.props && n.props["data-group-idx"] === 2)[0];
+ok("default blue keeps the exact legacy tint + bar", !!gAccBlue &&
+  gAccBlue.props.style.backgroundColor === "rgba(79, 140, 255, 0.10)" &&
+  gAccBlue.props.style.paddingLeft === 7 &&
+  /rgba\(79, 140, 255, 0\.85\)/.test(String((barLayerIn(gAccBlue) || { props: { style: {} } }).props.style.background)),
+  gAccBlue ? JSON.stringify({ bg: gAccBlue.props.style.backgroundColor, bar: barLayerIn(gAccBlue) && barLayerIn(gAccBlue).props.style.background }) : "no group 2");
+setHostField("accent", "pink");
+tAccP = render(propsFor(SNAP));
+const gAccPink = collect(tAccP, (n) => n.props && n.props["data-group-idx"] === 2)[0];
+ok("...and pink repaints it end to end", !!gAccPink &&
+  gAccPink.props.style.backgroundColor === "rgba(233, 61, 130, 0.10)" &&
+  /rgba\(233, 61, 130, 0\.85\)/.test(String((barLayerIn(gAccPink) || { props: { style: {} } }).props.style.background)) &&
+  !JSON.stringify(gAccPink.props.style).includes("79, 140, 255"),
+  gAccPink ? JSON.stringify({ bg: gAccPink.props.style.backgroundColor, bar: barLayerIn(gAccPink) && barLayerIn(gAccPink).props.style.background }) : "no group 2");
+setHostField("accent", "banana");
+tAccP = render(propsFor(SNAP));
+const gAccBanana = collect(tAccP, (n) => n.props && n.props["data-group-idx"] === 2)[0];
+ok("...while an unknown value falls back to blue", !!gAccBanana &&
+  gAccBanana.props.style.backgroundColor === "rgba(79, 140, 255, 0.10)" &&
+  /rgba\(79, 140, 255, 0\.85\)/.test(String((barLayerIn(gAccBanana) || { props: { style: {} } }).props.style.background)),
+  gAccBanana ? JSON.stringify({ bg: gAccBanana.props.style.backgroundColor, bar: barLayerIn(gAccBanana) && barLayerIn(gAccBanana).props.style.background }) : "no group 2");
+SCROLL.rows = new Map();
+store.clear(); resetComponent();
+
+console.log("--- scenario 24c: translucent surfaces ---");
+store.clear(); resetComponent();
+let tG = renderCard();
+cardHead(tG).props.onClick({});
+tG = renderCard();
+const glassRow = () => collect(tG, (n) => n.props && n.props.className === "dqt-seg")[0];
+ok("the card carries a translucent-surfaces row and a see-through slider",
+  textOf(tG).includes("半透明界面") && textOf(tG).includes("通透度") &&
+  !!sliderByLabel(tG, "通透度"),
+  textOf(tG).slice(0, 200));
+// the blur actually reaches the surfaces while the material is on
+let tGp = render(propsFor(SNAP));
+const panelG = findPanel(tGp);
+ok("with the material on, the panel's fill is the translucent mix",
+  /color-mix/.test(String(panelG.props.style.background)),
+  String(panelG.props.style.background));
+// switching it off in the card makes every surface solid again
+// 模糊开关 is the first 开启/关闭 row in the card, so its 关闭 is the first one
+const glassOffBtn = collect(tG, (n) => n.props && n.props.children === "关闭" && typeof n.props.onClick === "function")[0];
+if (glassOffBtn) glassOffBtn.props.onClick({});
+tG = renderCard();
+tGp = render(propsFor(SNAP));
+ok("...and switching it off turns every surface solid",
+  hostValue.glass === false &&
+  String(findPanel(tGp).props.style.background).indexOf("rgba(79") < 0 &&
+  String(findPanel(tGp).props.style.background).indexOf("color-mix") < 0,
+  String(findPanel(tGp) && findPanel(tGp).props.style.background));
+store.clear(); resetComponent();
+
 console.log("--- scenario 25: panel <-> card live sync ---");
 store.clear(); resetComponent();
 let t25 = render(propsFor(SNAP));
@@ -2826,10 +2941,12 @@ c25 = renderCard();
 // the boolean rows are joined 开启/关闭 segments now; fuzzy is the first of the three
 const cardSegButtons = () => collect(c25, (n) => n.props && typeof n.props.children === "string" && (n.props.children === "开启" || n.props.children === "关闭") && typeof n.props.onClick === "function");
 ok("a panel-side switch reaches the card as the 开启 option",
-  /dqt-segOn/.test(String(cardSegButtons()[0].props.className)) && cardSegButtons()[0].props["aria-pressed"] === true,
-  String(cardSegButtons()[0].props.className));
+  // index 2/3 are the 模糊搜索 row's pair: the glass row was added above it, and
+  // every row before that is also a 开启/关闭 segment
+  /dqt-segOn/.test(String(cardSegButtons()[2].props.className)) && cardSegButtons()[2].props["aria-pressed"] === true,
+  String(cardSegButtons()[2].props.className));
 // card -> panel: switching it off there turns the panel's fuzzy switch off
-cardSegButtons()[1].props.onClick({});
+cardSegButtons()[3].props.onClick({});
 t25 = render(propsFor(SNAP));
 ok("switching it off in the card turns the panel's switch off", /点击开启$/.test(String(fuzzyPill(t25) && fuzzyPill(t25).props.title)), String(fuzzyPill(t25) && fuzzyPill(t25).props.title));
 ok("...and both layers agree (off IS the default: the entry leaves the document)", store.get("dsh-quick-toc.fuzzy.v1") === "0" && !("fuzzy" in hostValue), JSON.stringify([store.get("dsh-quick-toc.fuzzy.v1"), hostValue.fuzzy]));
@@ -2859,6 +2976,13 @@ hoverRow(t26).props.onMouseEnter({ currentTarget: at });
 tickTimeouts();
 t26 = render(propsFor(SNAP));
 ok("...and switching it back on brings the card back", !!hoverCardIn(t26));
+// the card is a floating layer with its own material: it must actually GET it
+// the card matches the panel exactly: same translucent fill and the same small
+// blur radius
+ok("...and that card wears the panel's translucent material and its small blur",
+  !!hoverCardIn(t26) && /color-mix/.test(String(hoverCardIn(t26).props.style.background || "")) &&
+  /blur\(/.test(String(hoverCardIn(t26).props.style.backdropFilter || "")),
+  JSON.stringify([hoverCardIn(t26) && hoverCardIn(t26).props.style.background, hoverCardIn(t26) && hoverCardIn(t26).props.style.backdropFilter]));
 store.clear(); resetComponent();
 
 console.log("--- scenario 27: a 0.5.x install's stored values are imported once ---");
@@ -3042,7 +3166,7 @@ const modeWrapper = (t) => collect(t, (n) => n.props && String(n.props.className
 const modeClass = (t) => String(modeWrapper(t).props.className).split(/\s+/).filter((c) => c.indexOf("dqt-mode") === 0).join(" ");
 const groupBox = (t, idx) => collect(t, (n) => n.props && n.props["data-group-idx"] === idx)[0];
 const qHeaderLabel = (t) => collect(t, (n) => n.props && n.props.title === "跳转到该回合的模型回答开头")[0];
-const headerRow = (t) => collect(t, (n) => n.props && n.props.style && n.props.style.position === "sticky" && n.props.style.height)[0];
+const headerRow = (t) => groupHead(t);
 store.clear(); resetComponent();
 let t29 = openSearch(propsFor(SNAP));
 ok("the scope pill starts on 标题 (提问 is one click away)", !!questionsBtn(t29) && questionsBtn(t29).props["data-scope"] === "title");
@@ -3435,15 +3559,21 @@ t33 = render(propsFor(SNAP));
 ok("...and the curtain only drops once the panel has finished travelling", !!sheetNode(t33) && !findPanel(t33));
 ok("the sheet drops in with its enter animation", !!sheetNode(t33) && String(sheetNode(t33).props.className).includes("dqt-sheet-open"), sheetNode(t33) && String(sheetNode(t33).props.className));
 ok("...full width of the conversation area", sheetShell(t33).props.style.width === 1000 && sheetShell(t33).props.style.left === 300, JSON.stringify([sheetShell(t33).props.style.width, sheetShell(t33).props.style.left]));
-ok("...hanging from the top edge and square where it meets it", sheetShell(t33).props.style.top === 0 && sheetNode(t33).props.style.borderRadius === "0 0 12px 12px", JSON.stringify([sheetShell(t33).props.style.top, sheetNode(t33).props.style.borderRadius]));
+ok("...hanging from the top edge and square where it meets it", sheetShell(t33).props.style.top === 0 && sheetNode(t33).props.style.borderRadius === "0 0 18px 18px", JSON.stringify([sheetShell(t33).props.style.top, sheetNode(t33).props.style.borderRadius]));
 ok("...with NO dimming layer over the conversation", !collect(t33, (n) => n.props && n.props["data-sheet-backdrop"] === "on")[0]);
 ok("the bottom edge carries a visible line (border-box keeps it inside the clip)", sheetNode(t33).props.style.boxSizing === "border-box" && /^1px solid rgba\(120, 120, 120/.test(String(sheetNode(t33).props.style.borderBottom)), String(sheetNode(t33).props.style.borderBottom) + " / " + String(sheetNode(t33).props.style.boxSizing));
 ok("...and an outer shadow lands at the bottom, following the rounded corners", (() => {
   const shadow = String(sheetNode(t33).props.style.boxShadow || "");
-  const layers = shadow.split(/\), /).map((s) => s + ")");
-  return layers.length === 2 && layers.every((layer) => /^0 /.test(layer)) && layers.every((layer) => /-\d+px/.test(layer));
+  // the rim is drawn INSIDE the box, so it starts with `inset`; the drop shadow is
+  // the pair that starts at 0 offset with a negative spread
+  const outer = shadow.split(/\), /).map((s) => s + ")").filter((layer) => !/^inset /.test(layer));
+  return outer.length === 2 && outer.every((layer) => /^0 /.test(layer)) && outer.every((layer) => /-\d+px/.test(layer));
 })(), String(sheetNode(t33).props.style.boxShadow));
-ok("...with room below the curtain for the shadow to land in", sheetNode(t33).props.style.height === "calc(100% - 24px)", String(sheetNode(t33).props.style.height));
+ok("...plus the two inset rim lines that make it read as a surface", (() => {
+  const shadow = String(sheetNode(t33).props.style.boxShadow || "");
+  return shadow.indexOf("inset 0 1px 0") === 0 && shadow.indexOf("inset 0 -1px 0") > 0;
+})(), String(sheetNode(t33).props.style.boxShadow));
+ok("...with room below the curtain for the shadow to land in", sheetNode(t33).props.style.height === "calc((100% - 24px) * 1)", String(sheetNode(t33).props.style.height));
 ok("...carrying the SAME list (one ref, not a second one)", collect(sheetNode(t33), (n) => n.props && n.props.className === "dqt-list").length === 1);
 ok("...still showing the outline rows", textOf(t33).includes("细节 A"));
 // the handle is pressed flat and held for a beat so that press is seen, then it goes
@@ -3462,9 +3592,9 @@ const curtainCard = collect(t33, (n) => n.props && n.props.className === "dqt-ho
 ok("the hover preview card floats ABOVE the curtain, not behind it", !!curtainCard && curtainCard.props.style.zIndex > sheetShell(t33).props.style.zIndex, curtainCard ? curtainCard.props.style.zIndex + " vs sheet " + sheetShell(t33).props.style.zIndex : "no card");
 // (2) the travel is a real slide: the keyframes move the whole sheet, not a fade
 const sheetCss = cssText();
-ok("the curtain flies down from above the line it hangs from", sheetCss.includes("@keyframes dqt-sheet-in{from{transform:translateY(-100%)}to{transform:translateY(0)}}") && sheetCss.includes("@keyframes dqt-sheet-out{from{transform:translateY(0)}to{transform:translateY(-100%)}}"));
+ok("the curtain flies down from above the line it hangs from", sheetCss.includes("@keyframes dqt-sheet-in{from{transform:translateY(calc(-100% - 24px));animation-timing-function:cubic-bezier(0.22, 0.9, 0.3, 1)}62%{transform:translateY(4px);animation-timing-function:cubic-bezier(0.45, 0, 0.25, 1)}to{transform:translateY(0)}}") && sheetCss.includes("@keyframes dqt-sheet-out{from{transform:translateY(0)}to{transform:translateY(calc(-100% - 24px))}}"));
 ok("...and it is not a fade", !/dqt-sheet-(in|out)\{[^}]*opacity/.test(sheetCss));
-ok("...with an outer clip box so it is never seen above that line", sheetShell(t33).props.style.overflow === "hidden" && sheetNode(t33).props.style.height === "calc(100% - 24px)", String(sheetNode(t33).props.style.height));
+ok("...with an outer clip box so it is never seen above that line", sheetShell(t33).props.style.overflow === "hidden" && sheetNode(t33).props.style.height === "calc((100% - 24px) * 1)", String(sheetNode(t33).props.style.height));
 ok("...whose drop and retract are NOT dropped under reduced motion (the reader wants the movement)", !/prefers-reduced-motion[^}]*\.dqt-sheet-open/.test(sheetCss) && !/@media \(prefers-reduced-motion: reduce\)\{\.dqt-sheet-(open|closing)/.test(sheetCss));
 ok("...while the questions-only cross-fade still honours it", /@media \(prefers-reduced-motion: reduce\)\{\.dqt-mode-out,\.dqt-mode-in\{animation:none\}\}/.test(sheetCss) && !/prefers-reduced-motion[^}]*dqt-sheet-handle/.test(sheetCss));
 // (3) the curtain's own chrome: fewer controls, all of them larger
@@ -3501,7 +3631,7 @@ ok("...and carries the section's opening text out to the right", wideParts.lengt
 ok("...but the small text only takes what the title leaves over", wideParts[1].props.style.flex === "0 1 auto" && wideParts[2].props.style.flex === "1 1 0", JSON.stringify([wideParts[1].props.style.flex, wideParts[2].props.style.flex]));
 ok("...and the curtain's type is a step larger than the docked panel's", collect(sheetNode(t33), (n) => n.props && n.props["data-jump-key"])[0].props.style.fontSize === 16.5 && collect(sheetNode(t33), (n) => n.props && n.props["data-jump-key"])[0].props.style.lineHeight === "26px");
 ok("...with the turn bands grown to match (14px / 24px)", (() => {
-  const band = collect(sheetNode(t33), (n) => n.props && n.props.style && n.props.style.position === "sticky")[0];
+  const band = groupHead(sheetNode(t33));
   const label = band && collect(band, (n) => n.props && n.props["data-nav-row"] === "1")[0];
   return !!band && band.props.style.height === 24 && !!label && label.props.style.fontSize === 14;
 })() === true);
@@ -3807,7 +3937,7 @@ resetComponent();
 t35 = render(propsFor(SNAP));
 byTitle(t35, "展开大纲")[0].props.onClick();
 t35 = render(propsFor(SNAP));
-const band35 = collect(t35, (n) => n.props && n.props.style && n.props.style.position === "sticky")[0];
+const band35 = groupHead(t35);
 const bandBtn35 = band35 && endBtnOf(band35);
 ok("a group header carries one too", !!bandBtn35 && bandBtn35.props["data-end-turn"] !== undefined, bandBtn35 ? JSON.stringify([bandBtn35.props["data-dqt-end"], bandBtn35.props["data-end-turn"]]) : "none");
 ok("...aimed at that whole turn", !!bandBtn35 && typeof bandBtn35.props["data-end-turn"] === "string");
@@ -4270,6 +4400,9 @@ const menuEl = (t) => collect(t, (n) => n.props && n.props["data-dqt-menu"] === 
 const fadingMenu = (t) => { const m = menuEl(t); return m && hasClass(m, "dqt-rowmenu-closing") ? m : null; };
 const liveMenu = (t) => { const m = menuEl(t); return m && !hasClass(m, "dqt-rowmenu-closing") ? m : null; };
 const menuItems = (t) => { const m = liveMenu(t); return m ? collect(m, (n) => n.props && n.props["data-dqt-menu-item"]) : []; };
+// menu entries are addressed by id now: the list has six of them plus separators,
+// so positions are no longer a stable way to say "the pin item"
+const menuItem = (t, id) => menuItems(t).find((n) => n.props["data-dqt-menu-item"] === id);
 const noop = { preventDefault() {}, stopPropagation() {} };
 const rightClick = (i, y) => Object.assign({ clientX: 120, clientY: y === undefined ? 200 : y }, rowArgs(i), noop);
 
@@ -4310,12 +4443,12 @@ ok("...and the menu carries the pop animation class", hasClass(liveMenu(tp), "dq
 fireDocument("mousedown", { button: 2, target: { closest: () => null } }); // the right-click itself
 tp = render(propsFor(SNAP));
 ok("a right-click does not drop the pinned card", !!pinOn(tp), cardsAt(tp).map((c) => c.props.className).join(" "));
-ok("the pinned row's menu offers to unpin instead", textOf(menuItems(tp)[0]).includes("取消钉住"), textOf(menuItems(tp)[0]));
+ok("the pinned row's menu offers to unpin instead", textOf(menuItem(tp, "pin")).includes("取消钉住"), textOf(menuItem(tp, "pin")));
 ok("the menu offers jump-to-section-end as well",
-  menuItems(tp).length === 2 && textOf(menuItems(tp)[1]).includes("跳到本节末尾"), menuItems(tp).map(textOf).join(" | "));
+  menuItems(tp).length === 6 && textOf(menuItem(tp, "end")).includes("跳到本节末尾"), menuItems(tp).map(textOf).join(" | "));
 
 // ---- closing the menu fades it out instead of making it vanish ----
-menuItems(tp)[1].props.onClick(noop); // the jump item
+menuItem(tp, "end").props.onClick(noop); // the jump item
 tp = render(propsFor(SNAP));
 ok("running a menu item leaves the menu fading, not gone", !!fadingMenu(tp), String(menuEl(tp) && menuEl(tp).props.className));
 ok("...and the pin survives a jump", !!pinOn(tp));
@@ -4335,7 +4468,7 @@ ok("...and the pinned card is gone once the fade is over", !pinnedEl(tp), allCar
 // ---- pinning from the menu: where it lands, and that it animates in ----
 rowsAt(tp)[0].props.onContextMenu(rightClick(0));
 tp = render(propsFor(SNAP));
-menuItems(tp)[0].props.onClick(noop);
+menuItem(tp, "pin").props.onClick(noop);
 tp = render(propsFor(SNAP));
 ok("pinning from the menu keeps a card on screen", !!pinOn(tp));
 // the card belongs where its ROW is, not where the right-click landed (the menu opens
@@ -4369,6 +4502,235 @@ ok("unpinning from the card fades it instead of making it vanish",
 tickTimeouts();
 tp = render(propsFor(SNAP));
 ok("...and the pin is gone after the fade", !pinnedEl(tp), allCards(tp).map((c) => c.props.className).join(" | "));
+
+// ---- B: bookmarks (per session, browser-local) ----
+const marksBtnIn = (t) => collect(t, (n) => n.props && n.props["data-dqt-marks"])[0];
+const markFlagsIn = (t) => collect(t, (n) => n.props && n.props["data-dqt-mark"]);
+const markRowsIn = (t) => collect(t, (n) => n.props && n.props["data-dqt-markrow"]);
+ok("the bookmark button is always there, and its tooltip carries the count",
+  !!marksBtnIn(tp) && /（0）/.test(String(marksBtnIn(tp).props.title)),
+  marksBtnIn(tp) ? String(marksBtnIn(tp).props.title) : "no button");
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+ok("the row menu offers a bookmark entry", !!menuItem(tp, "mark") && textOf(menuItem(tp, "mark")).includes("加入书签"), textOf(menuItem(tp, "mark")));
+ok("...and both copy entries", !!menuItem(tp, "copyTitle") && !!menuItem(tp, "copySection"),
+  menuItems(tp).map((n) => n.props["data-dqt-menu-item"]).join(","));
+// The two copy entries must produce DIFFERENT text even for a heading with no
+// sub-headings — that was the reported "they are almost the same". The clipboard is
+// captured by stubbing the one API copyText prefers.
+const CLIP = [];
+try {
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { clipboard: { writeText: (s) => { CLIP.push(String(s)); } } }
+  });
+} catch (e) { /* the fallback path is exercised instead */ }
+menuItem(tp, "copyTitle").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+menuItem(tp, "copySection").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("copying a heading puts just the heading text on the clipboard",
+  CLIP.length === 2 && CLIP[0].trim() === "总览" && !CLIP[0].includes("#"),
+  JSON.stringify(CLIP[0]));
+ok("...while copying the section gives the headings below it, as Markdown",
+  CLIP.length === 2 && /^#+ /.test(CLIP[1]) && CLIP[1].includes("## 细节 A") && CLIP[1].includes("### 更深一层") && CLIP[1] !== CLIP[0],
+  JSON.stringify(CLIP[1]));
+ok("...and the section entry is absent for a heading with nothing under it", (() => {
+  // the last outline row of the snapshot is a leaf (no sub-headings)
+  const rows = collect(tp, (n) => n.props && n.props["data-jump-key"] && n.props.onContextMenu);
+  for (let i = rows.length - 1; i >= 0; i--) {
+    rows[i].props.onContextMenu(rightClick(i));
+    const m = render(propsFor(SNAP));
+    const menu = collect(m, (n) => n.props && n.props["data-dqt-menu"] === "on")[0];
+    if (!menu) continue;
+    const hasSection = !!collect(menu, (n) => n.props && n.props["data-dqt-menu-item"] === "copySection")[0];
+    const hasTitle = !!collect(menu, (n) => n.props && n.props["data-dqt-menu-item"] === "copyTitle")[0];
+    fireDocument("mousedown", { target: { closest: () => null } });
+    tickTimeouts();
+    render(propsFor(SNAP));
+    // every row must still offer copy heading, and only rows with children may
+    // offer copy section
+    if (!hasTitle) return false;
+    if (hasSection) continue;
+    return true;
+  }
+  return false;
+})(), "no leaf row without a section entry");
+ok("...and the menu says so for a beat instead of closing silently",
+  (() => { rowsAt(tp)[0].props.onContextMenu(rightClick(0)); const m = render(propsFor(SNAP));
+    menuItem(m, "copyTitle").props.onClick(noop); const after = render(propsFor(SNAP));
+    return !!menuItem(after, "copyTitle") && textOf(menuItem(after, "copyTitle")).includes("已复制"); })(),
+  "no confirmation");
+// the copy confirmation owns the menu for a beat and then closes it: leave a clean
+// slate (and a live menu) for the bookmark steps that follow
+fireDocument("mousedown", { target: { closest: () => null } });
+tickTimeouts();
+tp = render(propsFor(SNAP));
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+menuItem(tp, "mark").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("bookmarking a row puts a flag on it", markFlagsIn(tp).length === 1, `${markFlagsIn(tp).length} flags`);
+const ribbonRowMargin = (() => {
+  for (const n of rowsAt(tp)) if (n.props.style && n.props.style.marginLeft) return n.props.style.marginLeft;
+  return 0;
+})();
+ok("the ribbon is inside the row and the row reaches back to the panel edge",
+  markFlagsIn(tp)[0].props.style.left === 0 && ribbonRowMargin < 0,
+  `left ${markFlagsIn(tp)[0].props.style.left}, row marginLeft ${ribbonRowMargin}`);
+ok("...painted in the theme colour (an SVG fill attribute cannot take a var: it came out black)",
+  /brand-primary|#/.test(String(markFlagsIn(tp)[0].props.style.background)), String(markFlagsIn(tp)[0].props.style.background));
+ok("...flat on the panel side and cut to a concave point on the other",
+  /polygon\(0 0, 100% 0,/.test(String(markFlagsIn(tp)[0].props.style.clipPath)), String(markFlagsIn(tp)[0].props.style.clipPath));
+// the ribbon is always in the DOM and only fades: creating and destroying the layer
+// made it pop, which is the opposite of what saving a place should feel like
+const allRibbons = (t) => collect(t, (n) => n.props && n.props.style && /polygon\(0 0/.test(String(n.props.style.clipPath)));
+ok("every row carries a ribbon layer, so saving and unsaving can fade",
+  allRibbons(tp).length === rowsAt(tp).length, `${allRibbons(tp).length} ribbons for ${rowsAt(tp).length} rows`);
+ok("...only the bookmarked one is opaque, and all of them animate",
+  allRibbons(tp).filter((r) => r.props.style.opacity === 1).length === 1 &&
+  allRibbons(tp).filter((r) => r.props.style.opacity === 0).length === allRibbons(tp).length - 1 &&
+  allRibbons(tp).every((r) => /opacity 0\.24s/.test(String(r.props.style.transition))),
+  allRibbons(tp).map((r) => r.props.style.opacity).join(","));
+ok("...painted with a concrete colour, never a var() (a var in an SVG attribute painted black)",
+  /^#[0-9a-f]{6}$/i.test(String(markFlagsIn(tp)[0].props.style.background)),
+  String(markFlagsIn(tp)[0].props.style.background));
+ok("...and the header button reports that count in its tooltip",
+  !!marksBtnIn(tp) && /（1）/.test(String(marksBtnIn(tp).props.title)),
+  marksBtnIn(tp) ? String(marksBtnIn(tp).props.title) : "no button");
+ok("...and it is stored per session, outside the settings document",
+  (() => { try { const raw = JSON.parse(localStorage.getItem("dsh-quick-toc.bookmarks.v1") || "{}");
+    const list = raw.s1;
+    return Array.isArray(list) && list.length === 1 && !!list[0].key; } catch (e) { return false; } })(),
+  (() => { try { return String(localStorage.getItem("dsh-quick-toc.bookmarks.v1")).slice(0, 120); } catch (e) { return "read failed"; } })());
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+ok("...and the menu now offers to remove it", textOf(menuItem(tp, "mark")).includes("移出书签"), textOf(menuItem(tp, "mark")));
+fireDocument("mousedown", { target: { closest: () => null } }); // dismiss
+tickTimeouts();
+tp = render(propsFor(SNAP));
+marksBtnIn(tp).props.onClick(noop);
+tp = render(propsFor(SNAP));
+const listIsHidden = (t) => {
+  const el = collect(t, (n) => n.props && n.props.className === "dqt-list")[0];
+  return !!el && el.props.style && el.props.style.visibility === "hidden";
+};
+ok("clicking the count switches the list to bookmarks only",
+  markRowsIn(tp).length === 1 && marksBtnIn(tp).props["data-dqt-marks"] === "only" &&
+  rowsAt(tp).length > 1 && listIsHidden(tp),
+  `${markRowsIn(tp).length} mark rows, ${rowsAt(tp).length} outline rows, hidden ${listIsHidden(tp)}`);
+ok("...and the one row it shows is the bookmarked heading", textOf(markRowsIn(tp)[0]).includes("总览"), textOf(tp).slice(0, 80));
+ok("...and it is a plain row: no jump key and no keyboard cursor to collide with the outline",
+  markRowsIn(tp)[0].props["data-jump-key"] === undefined && markRowsIn(tp)[0].props["data-nav-row"] === undefined,
+  JSON.stringify([markRowsIn(tp)[0].props["data-jump-key"], markRowsIn(tp)[0].props["data-nav-row"]]));
+marksBtnIn(tp).props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("...and clicking it again brings the whole outline back", rowsAt(tp).length > 1, `${rowsAt(tp).length} rows`);
+// opening the bookmark view and closing it must land where the reader was, not at
+// the top: the bookmark list is short, so the browser clamps the scroll offset to 0
+// the moment it renders unless the position was taken beforehand
+LIST_STUB.scrollTop = 180;
+marksBtnIn(tp).props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("...and opening it remembers where the reader was",
+  markRowsIn(tp).length === 1 && listIsHidden(tp) && rowsAt(tp).length > 1,
+  `${markRowsIn(tp).length} mark rows`);
+// the outline is only hidden, never unmounted, so its scroll offset is never
+// clamped in the first place — closing has nothing to restore
+marksBtnIn(tp).props.onClick(noop);
+tp = render(propsFor(SNAP));
+ok("closing the bookmark view leaves the scroll position exactly where it was",
+  LIST_STUB.scrollTop === 180 && !listIsHidden(tp), `scrollTop ${LIST_STUB.scrollTop}`);
+LIST_STUB.scrollTop = 0;
+// removing the last bookmark (from the outline) drops the chip again — the bookmark
+// view is the only place it must stay, and that is guarded separately: with the view
+// open the chip is rendered even at zero, so there is always a way back
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+menuItem(tp, "mark").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("with nothing left to show the count goes back to 0 (the button stays)",
+  !!marksBtnIn(tp) && /（0）/.test(String(marksBtnIn(tp).props.title)) && markRowsIn(tp).length === 0,
+  `count ${marksBtnIn(tp) ? String(marksBtnIn(tp).props.title) : "none"}`);
+ok("...and the outline is untouched by any of it", rowsAt(tp).length > 1, `${rowsAt(tp).length} rows`);
+// the bookmark ribbon: flush with the panel edge (the group box's own left edge),
+// a concave point on the far side, and painted in the theme colour — as an SVG fill
+// attribute a `var()` turns the shape black
+localStorage.removeItem("dsh-quick-toc.bookmarks.v1");
+store.clear(); resetComponent();
+// the count is capped and the glyph shrinks with it, so it can never outgrow the star
+const fillMarks = (n) => {
+  const list = [];
+  for (let i = 0; i < n; i++) list.push({ key: "k" + i, idx: 0, title: "t" + i, level: 1, at: i });
+  localStorage.setItem("dsh-quick-toc.bookmarks.v1", JSON.stringify({ s1: list }));
+  resetComponent();
+  return render(propsFor(SNAP));
+};
+let tmrk = fillMarks(7);
+ok("a single-digit count shows in the tooltip", /（7）/.test(String(marksBtnIn(tmrk).props.title)), String(marksBtnIn(tmrk).props.title));
+tmrk = fillMarks(120);
+ok("anything past 99 reads 99+", /（99\+）/.test(String(marksBtnIn(tmrk).props.title)), String(marksBtnIn(tmrk).props.title));
+// no digits are drawn on the face at all: a squeezed number in a 15px star was
+// the thing that did not fit, and the tooltip has room for it
+ok("...and the star carries no number of its own", textOf(marksBtnIn(tmrk)) === "", textOf(marksBtnIn(tmrk)));
+ok("the star is drawn in the same colour as the other header icons",
+  String(marksBtnIn(tmrk).props.style.color || "").length > 0, String(marksBtnIn(tmrk).props.style.color));
+localStorage.removeItem("dsh-quick-toc.bookmarks.v1");
+store.clear(); resetComponent();
+tp = render(propsFor(SNAP));
+byTitle(tp, "展开大纲")[0].props.onClick();
+tp = render(propsFor(SNAP));
+// the store survives a remount of the component, which is what a page reload does
+// (NOTE: only the component is reset here — store.clear() would wipe localStorage,
+// which is exactly the thing under test)
+rowsAt(tp)[0].props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+menuItem(tp, "mark").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+resetComponent();
+tp = render(propsFor(SNAP));
+ok("a bookmark survives a remount (it lives in the browser, not the component)",
+  markFlagsIn(tp).length === 1 && !!marksBtnIn(tp) && /（1）/.test(String(marksBtnIn(tp).props.title)),
+  `${markFlagsIn(tp).length} flags`);
+localStorage.removeItem("dsh-quick-toc.bookmarks.v1");
+
+// ---- the time row opens the same menu, minus the two entries that need one row ----
+store.clear(); resetComponent();
+tp = render(propsFor(SNAP));
+byTitle(tp, "展开大纲")[0].props.onClick();
+tp = render(propsFor(SNAP));
+const headRow = collect(tp, (n) => n.props && n.props["data-dqt-grouplabel"] && n.props.onContextMenu)[0];
+ok("a time row takes a context menu", !!headRow);
+headRow.props.onContextMenu(rightClick(0));
+tp = render(propsFor(SNAP));
+const headIds = menuItems(tp).map((n) => n.props["data-dqt-menu-item"]);
+ok("...with jump, bookmark, copy section and section end",
+  headIds.indexOf("goto") >= 0 && headIds.indexOf("mark") >= 0 &&
+  headIds.indexOf("copySection") >= 0 && headIds.indexOf("end") >= 0, headIds.join(","));
+ok("...and without pinning a preview or copying one heading",
+  headIds.indexOf("pin") < 0 && headIds.indexOf("copyTitle") < 0, headIds.join(","));
+ok("...and no separator is left dangling by the removed entries",
+  headIds[0] !== "sep1" && !/sep.*sep/.test(headIds.join(",")), headIds.join(","));
+const CLIP2 = [];
+try {
+  Object.defineProperty(globalThis, "navigator", {
+    configurable: true,
+    value: { clipboard: { writeText: (s) => { CLIP2.push(String(s)); } } }
+  });
+} catch (e) {}
+menuItem(tp, "copySection").props.onClick(noop);
+tickTimeouts();
+tp = render(propsFor(SNAP));
+ok("copying a time row's section copies every heading under that turn",
+  CLIP2.length === 1 && /^#+ /.test(CLIP2[0]) && CLIP2[0].split("\n").length > 1,
+  JSON.stringify(CLIP2[0] || "").slice(0, 100));
 store.clear(); resetComponent();
 
 console.log("--- scenario 29 (0.9.0): a narrow window parks the side handle and keeps the droplet ---");

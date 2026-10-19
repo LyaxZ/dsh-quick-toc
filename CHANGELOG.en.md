@@ -2,6 +2,25 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.10.0] - 2026-10-19
+
+### Added
+- **Theme colour**: a new card row offers blue, red, yellow, green, purple and pink; selection states, the current group, search highlights and focus rings all follow it. Blue, the default, looks exactly as before.
+- **Translucent surfaces**: on by default — the curtain blurs the conversation behind it, and the panel and preview card let the background through. The "see-through" control in the same section adjusts both surfaces at once. Switched off automatically, and remembered, when the device cannot hold its frame rate.
+- **Curtain height**: drag the short bar on the curtain's bottom edge to change its height; the value is remembered.
+- **Bookmarks**: right-click any entry to save it, and a theme-coloured bookmark tab appears at the left of that row. The star button in the title bar switches the list to bookmarks only; they are kept per conversation, in this browser.
+- **Entry menu**: right-clicking an entry offers jump to this section, add bookmark, copy heading, copy the levels below it, pin the preview and jump to the end of the section. The time row takes the same menu, without the preview and copy-heading entries.
+- **Hierarchy guides**: entries below the first level carry a hairline in front of them, so the nesting is readable at a glance.
+- **Plugin card icon**: the plugins list and the card show this plugin's own icon.
+
+### Changed
+- **Corners and edges**: larger corner radius on both surfaces; a hairline highlight along the panel's top edge, a shadow on its conversation side, and the outline list now fades out at the bottom instead of ending on a hard line.
+- **Day labels**: no longer pinned over the content; a day strip above the list, as translucent as everything else, shows the day you have scrolled to.
+- **The current group's** accent bar fades out towards the bottom instead of ending on a hard edge.
+- **Hovering an entry** nudges it slightly; the curtain now settles with a light bounce instead of stopping dead.
+- **A resting panel** no longer dims enough to hurt reading.
+- **Supports DSH 0.2.1-rc.1 and 0.2.1-rc.2**: no plugin code changed; the compatibility declaration registers the two new prereleases, both verified item by item in an isolated environment.
+
 ## [0.9.5] - 2026-10-16
 
 ### Changed
