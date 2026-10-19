@@ -2,7 +2,7 @@
 
 > **English** | [中文](README.md)
 
-A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline — the same list as a side panel or as a full-width curtain — grouped by conversation turn and covering the whole session (including turns that are not loaded yet), with title/prompts/full-text/cross-session search, hover previews, several ways to jump (a heading, a turn header, the end of a section), and a reading position that both follows and is remembered.
+A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline — the same list as a side panel or as a full-width curtain — grouped by conversation turn and covering the whole session (including turns that are not loaded yet), with title/prompts/full-text/cross-session search, hover previews, a right-click menu for jumping and copying, bookmarks with a bookmarks-only view, six theme colours and a translucent material, and a reading position that both follows and is remembered.
 
 ## Features
 
