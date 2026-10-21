@@ -410,7 +410,11 @@ function expand(node) {
   if (Array.isArray(node)) return node.map(expand);
   if (typeof node !== "object") return node;
   if (typeof node.type === "function") {
-    try { return expand(node.type(node.props)); } catch (e) { return node; }
+    // NOT swallowed: a component that throws used to come back as an unexpanded
+    // element, so the suite happily went on asserting against an almost-empty tree
+    // (a ReferenceError inside the panel once looked like "the settings button is
+    // missing"). An exception is a broken build — say so.
+    return expand(node.type(node.props));
   }
   if (node.props && node.props.children !== undefined) {
     return { type: node.type, props: Object.assign({}, node.props, { children: expand(node.props.children) }) };
@@ -901,7 +905,7 @@ const collapseLine = 1400 - (100 + 48); // innerWidth - (viewport.right + 48)
 ok("right dock collapsed: clip hides exactly the panel width", panel.props.style.clipPath === `inset(0 ${panelW0}px 0 0)`, panel.props.style.clipPath);
 ok("right dock collapsed: the shadow clip has no visible width at rest", (() => {
   const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
-  return !!sh && sh.props.style.clipPath === `inset(-24px ${panelW0 - 8}px -24px 8px)`
+  return !!sh && sh.props.style.clipPath === `inset(-24px ${panelW0}px -24px 8px)`
     && insetWidth(sh.props.style.clipPath, panelW0) <= 0;
 })() === true);
 ok("right dock collapsed: left sits on the collapse line", Math.abs(collapsedLeft - collapseLine) < 0.5, `left=${collapsedLeft} line=${collapseLine}`);
@@ -910,9 +914,17 @@ tree = render(propsFor(SNAP));
 panel = findPanel(tree);
 const openLeft = panelX(panel);
 ok("right dock open: no clip on the panel (the wipe inset stays the travel distance)", panel.props.style.clipPath === "inset(0 0 0 0px)", panel.props.style.clipPath);
+const shOpenAtOnce = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
+ok("right dock: while the panel slides in the halo is clipped by exactly the same wipe (no reach ahead)",
+  !!shOpenAtOnce && shOpenAtOnce.props.style.clipPath === "inset(-24px 0px -24px -24px)",
+  String(shOpenAtOnce && shOpenAtOnce.props.style.clipPath));
+tickTimeouts();   // the slide lands; only now may the halo relax
+tree = render(propsFor(SNAP));
 ok("right dock open: its shadow twin lifts off with a soft halo on all four sides", (() => {
   const sh = collect(tree, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1")[0];
-  return !!sh && /^0 0 24px -4px rgba\(0, 0, 0/.test(String(sh.props.style.boxShadow)) && String(sh.props.style.transition || "").indexOf("box-shadow") >= 0 && sh.props.style.transform === panel.props.style.transform && sh.props.style.clipPath === "inset(-24px -8px -24px -24px)";
+  // the wipe cut only applies while the panel is moving: at rest all four sides bleed
+  // the same, or the halo ends on a straight edge just outside the panel's dock side
+  return !!sh && /^0 0 24px -4px rgba\(0, 0, 0/.test(String(sh.props.style.boxShadow)) && String(sh.props.style.transition || "").indexOf("box-shadow") >= 0 && sh.props.style.transform === panel.props.style.transform && sh.props.style.clipPath === "inset(-24px -24px -24px -24px)";
 })() === true);
 ok("right dock open: panel right edge === collapsed left (the hard-won invariant)", Math.abs(openLeft + panelW0 - collapsedLeft) < 0.5, `openRight=${openLeft + panelW0} collapsedLeft=${collapsedLeft}`);
 ok("open panel is visible on the chat view", panel.props.style.opacity > 0, String(panel.props.style.opacity));
@@ -939,6 +951,33 @@ const leftClosedShadow = collect(tree, (n) => n.props && n.props["data-dqt-panel
 const leftClosedWidth = px(leftClosedPanel.props.style.width);
 ok("left dock collapsed: the panel body is fully clipped", insetWidth(leftClosedPanel.props.style.clipPath, leftClosedWidth) <= 0, String(leftClosedPanel.props.style.clipPath));
 ok("left dock collapsed: the shadow clip has no visible width at rest", !!leftClosedShadow && insetWidth(leftClosedShadow.props.style.clipPath, leftClosedWidth) <= 0, String(leftClosedShadow && leftClosedShadow.props.style.clipPath));
+// A wide panel in a narrow window: `clampLeft` pulls the open position inwards, and
+// the collapse wipe (which is the travel) then used to come out SHORTER than the
+// panel — leaving a strip of it standing on the workspace until the state flipped.
+// Reported on a 13" screen; the parked anchor must be derived from the clamped open
+// position so the travel is always panelW + 16.
+const realInnerWidth = globalThis.window.innerWidth;
+globalThis.window.innerWidth = 1000;
+store.set("dsh-quick-toc.panelW.v1", 1100);
+resetComponent();
+const treeNarrow = render(propsFor(SNAP));
+const narrowPanel = findPanel(treeNarrow);
+const narrowW = px(narrowPanel.props.style.width);
+// the stored width was 1100 in a 1000px window: the panel gives way by SHRINKING
+// (staying on the area's edge) instead of being pushed inwards, and the wipe stays
+// exactly the travel — the same distance the tuck travels, so the line it
+// closes to is the line it reopens from
+ok("a panel that cannot fit shrinks instead of being pushed off the area edge",
+  narrowW < 1100 && insetWidth(narrowPanel.props.style.clipPath, narrowW) <= 0,
+  `width ${narrowW}, clip ${String(narrowPanel.props.style.clipPath)}`);
+// the wipe is exactly the travel, so the tuck line and the open line are one number
+ok("...and its wipe is exactly the travel, so both legs end on one line",
+  String(narrowPanel.props.style.clipPath) === `inset(0 0 0 ${narrowW + 16}px)`,
+  String(narrowPanel.props.style.clipPath));
+globalThis.window.innerWidth = realInnerWidth;
+store.set("dsh-quick-toc.panelW.v1", 0);
+resetComponent();
+tree = render(propsFor(SNAP));
 byTitle(tree, "展开大纲")[0].props.onClick({});
 tree = render(propsFor(SNAP));
 const leftPanel = findPanel(tree);
@@ -3824,8 +3863,11 @@ ok("open, it sits just inside the conversation area", panelX(findPanel(t34)) ===
 SCROLL.left = 1200;
 tickIntervals(); // the slow re-measure beat sees it; no resize event is involved
 t34 = render(propsFor(SNAP));
-ok("an area pushed right cannot push the open panel past the right edge",
-  panelX(findPanel(t34)) === 1400 - 288 - 8, String(findPanel(t34).props.style.left));
+// the panel used to be pushed inwards here; it now keeps the area edge and gives way
+// by narrowing, which is the only way the tuck line and the open line stay the same
+ok("an area pushed right shrinks the open panel instead of pushing it off the area edge",
+  panelX(findPanel(t34)) === 1208 && px(findPanel(t34).props.style.width) === 184,
+  `${String(findPanel(t34).props.style.left)} / width ${px(findPanel(t34).props.style.width)}`);
 SCROLL.left = 300;
 tickIntervals();
 t34 = render(propsFor(SNAP));

@@ -2,6 +2,17 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.10.1] - 2026-10-21
+
+### Fixed
+- **Collapsing and expanding used to land on different spots**: the place the panel came to rest and the place it reappeared from differed slightly; both now sit on the same line.
+- **A narrow window left a strip of the panel behind**: on a narrow window the collapsed panel kept a visible edge; it now clears away completely.
+- **The collapsed handle did not line up with the panel's edge**: the handle sat a little to one side of the panel edge; the two now share a line.
+- **On the right dock the outer shadow arrived before the content**: while expanding, the halo around the panel showed before the content underneath it; both are now clipped together, and the halo settles once the slide is done.
+
+### Changed
+- **A panel wider than the space available now narrows instead**: when the window cannot hold the width that was chosen, the panel narrows sideways and stays against the conversation area's edge rather than being pushed away from it; a wider window brings the chosen width back.
+
 ## [0.10.0] - 2026-10-19
 
 ### Added
