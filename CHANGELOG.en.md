@@ -2,6 +2,18 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.10.2] - 2026-10-22
+
+### Added
+- **A bookmarks panel on the curtain**: the curtain's toolbar has a bookmarks button on the left, beside the settings button; it slides in from the right in the same drawer the search uses, and the outline stays where it is instead of being replaced.
+
+### Changed
+- **The theme colour reaches more places**: hovering an entry paints its hierarchy guide in the theme colour, the search box takes it as a focus border, the hover preview card carries a theme-coloured bar on its reading side, and a pinned card's ring gets a filled core in the same colour.
+
+### Fixed
+- **The theme colour came out black in a light theme**: with blue chosen, the plugin borrowed the host's accent colour, which is near-black ink in a light theme — so the guides, the search border, the card's bar and the pin's core all turned black. All six colours now use values of the plugin's own.
+- **The curtain's landing bounce opened an unblurred seam along its top edge**: the settle now stretches downward from the top edge, so the top never leaves the line it hangs from.
+
 ## [0.10.1] - 2026-10-21
 
 ### Fixed

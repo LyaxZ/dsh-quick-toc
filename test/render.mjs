@@ -1262,6 +1262,14 @@ store.clear(); resetComponent();
 tree = render(propsFor(SNAP));
 collect(tree, (n) => n.props && n.props.title === "搜索标题")[0].props.onClick({ stopPropagation() {} });
 tree = render(propsFor(SNAP));
+// the search box carries the theme colour while the caret is in it: the pill is a
+// class, not inline state, so the accent stylesheet can follow the picker
+ok("the search box takes the theme colour while it is focused",
+  (() => {
+    const pill = collect(tree, (n) => n.props && n.props.className === "dqt-search-pill")[0];
+    // the accent table stores the triplet with spaces: "79, 140, 255"
+    return !!pill && /\.dqt-search-pill:focus-within\{background:rgba\(79, 140, 255,0\.12\);box-shadow:inset 0 0 0 1px #4F8CFF\}/.test(cssText());
+  })());
 // NB: handlers must be re-read from the LATEST render (a stale closure still has
 // an empty `matches` array, which is not how React behaves)
 collect(tree, (n) => n.type === "input")[0].props.onChange({ target: { value: "细节" } });
@@ -3631,7 +3639,13 @@ const curtainCard = collect(t33, (n) => n.props && n.props.className === "dqt-ho
 ok("the hover preview card floats ABOVE the curtain, not behind it", !!curtainCard && curtainCard.props.style.zIndex > sheetShell(t33).props.style.zIndex, curtainCard ? curtainCard.props.style.zIndex + " vs sheet " + sheetShell(t33).props.style.zIndex : "no card");
 // (2) the travel is a real slide: the keyframes move the whole sheet, not a fade
 const sheetCss = cssText();
-ok("the curtain flies down from above the line it hangs from", sheetCss.includes("@keyframes dqt-sheet-in{from{transform:translateY(calc(-100% - 24px));animation-timing-function:cubic-bezier(0.22, 0.9, 0.3, 1)}62%{transform:translateY(4px);animation-timing-function:cubic-bezier(0.45, 0, 0.25, 1)}to{transform:translateY(0)}}") && sheetCss.includes("@keyframes dqt-sheet-out{from{transform:translateY(0)}to{transform:translateY(calc(-100% - 24px))}}"));
+ok("the curtain flies down from above the line it hangs from", sheetCss.includes("@keyframes dqt-sheet-in{from{transform:translateY(calc(-100% - 24px));animation-timing-function:cubic-bezier(0.22, 0.9, 0.3, 1)}62%{transform:translateY(0) scaleY(1.014);animation-timing-function:cubic-bezier(0.45, 0, 0.25, 1)}to{transform:translateY(0) scaleY(1)}}") && sheetCss.includes("@keyframes dqt-sheet-out{from{transform:translateY(0)}to{transform:translateY(calc(-100% - 24px))}}"));
+// the overshoot must not translate the sheet: a downward shift lifts its top edge off
+// the line it hangs from and the backdrop-filter only covers the sheet's own box, so
+// the conversation showed through that slit unblurred (reported from the real window)
+ok("...and its landing sage stretches from the top edge instead of moving it",
+  !/dqt-sheet-in\{[^}]*translateY\(4px\)/.test(sheetCss) && /62%\{transform:translateY\(0\) scaleY\(1\.0/.test(sheetCss) && sheetNode(t33).props.style.transformOrigin === "top center",
+  String(sheetNode(t33).props.style.transformOrigin));
 ok("...and it is not a fade", !/dqt-sheet-(in|out)\{[^}]*opacity/.test(sheetCss));
 ok("...with an outer clip box so it is never seen above that line", sheetShell(t33).props.style.overflow === "hidden" && sheetNode(t33).props.style.height === "calc((100% - 24px) * 1)", String(sheetNode(t33).props.style.height));
 ok("...whose drop and retract are NOT dropped under reduced motion (the reader wants the movement)", !/prefers-reduced-motion[^}]*\.dqt-sheet-open/.test(sheetCss) && !/@media \(prefers-reduced-motion: reduce\)\{\.dqt-sheet-(open|closing)/.test(sheetCss));
@@ -3643,6 +3657,42 @@ ok("...the search button on the right, then the way out", (() => {
   const kids = chromeNode(t33).props.children.filter(Boolean);
   return kids.length >= 2 && kids[kids.length - 2].props["data-tool"] === "search" && kids[kids.length - 1].props["data-tool"] === "close";
 })() === true);
+// ---- the curtain's bookmarks column: one drawer, two tenants ----
+const curtainMarksBtn = (t) => collect(chromeNode(t), (n) => n.props && n.props.className === "dqt-sheet-marks-btn")[0];
+const sheetColNode = (t) => collect(t, (n) => n.props && n.props.className === "dqt-sheet-search")[0];
+ok("the curtain offers the bookmarks right of the settings button, at the curtain's own size",
+  !!curtainMarksBtn(t33) && curtainMarksBtn(t33).props["data-tool"] === "marks" && curtainMarksBtn(t33).props.style.width === 32 &&
+  /书签/.test(String(curtainMarksBtn(t33).props.title)),
+  curtainMarksBtn(t33) ? String(curtainMarksBtn(t33).props.title) + " / " + curtainMarksBtn(t33).props.style.width : "no button");
+ok("...in the LEFT pair (settings, then bookmarks), not beside the magnifier", (() => {
+  const leftPair = (chromeNode(t33).props.children.filter(Boolean)[0] || {}).props;
+  const pair = (leftPair && leftPair.children) || [];
+  return pair.length === 2 && pair[0].props["data-tool"] === "settings" && pair[1].props["data-tool"] === "marks";
+})(), JSON.stringify((chromeNode(t33).props.children.filter(Boolean)[0].props.children || []).map((c) => c && c.props && c.props["data-tool"])));
+ok("...closed, so the drawer claims no width", px(sheetColNode(t33).props.style.width) === 0, String(sheetColNode(t33).props.style.width));
+curtainMarksBtn(t33).props.onClick();
+t33 = render(propsFor(SNAP));
+ok("...clicking it slides the SAME right-hand drawer the search uses",
+  px(sheetColNode(t33).props.style.width) === 360 && sheetColNode(t33).props["data-sheet-marks"] === "on",
+  String(sheetColNode(t33).props.style.width) + " / marks=" + String(sheetColNode(t33).props["data-sheet-marks"]));
+ok("...and the outline stays on screen beside it (no full-view takeover)",
+  !collect(t33, (n) => n.props && String(n.props.className || "").includes("dqt-marks-overlay")).length &&
+  collect(t33, (n) => n.props && n.props.className === "dqt-list")[0].props.style.visibility === undefined,
+  String(collect(t33, (n) => n.props && n.props.className === "dqt-list")[0].props.style.visibility));
+ok("...with its own title line and its own scroller",
+  /书签/.test(textOf(sheetColNode(t33))) && !!collect(sheetColNode(t33), (n) => n.props && n.props.className === "dqt-sheet-marks-body")[0],
+  textOf(sheetColNode(t33)).slice(0, 40));
+curtainMarksBtn(t33).props.onClick();
+t33 = render(propsFor(SNAP));
+ok("...and clicking it again closes the drawer", px(sheetColNode(t33).props.style.width) === 0, String(sheetColNode(t33).props.style.width));
+searchBtn(t33).props.onClick();
+t33 = render(propsFor(SNAP));
+ok("the two tenants never share the drawer (opening search takes it over)",
+  !!collect(t33, (n) => n.props && n.props.className === "dqt-sheet-results")[0] && sheetColNode(t33).props["data-sheet-marks"] === undefined,
+  String(sheetColNode(t33).props["data-sheet-marks"]));
+searchBtn(t33).props.onClick();
+t33 = render(propsFor(SNAP));
+
 ok("...whose cross is the docked panel's own, scaled up with the rest", (() => {
   const kids = chromeNode(t33).props.children.filter(Boolean);
   const svg = collect(kids[kids.length - 1], (n) => n.type === "svg")[0];
@@ -3654,7 +3704,8 @@ ok("...and the settings button's pinwheel scales up with them too", (() => {
   return !!svg && svg.props.viewBox === "0 0 16 16" && svg.props.width === 20;
 })() === true);
 const chromeBtns = collect(chromeNode(t33), (n) => n.type === "button" && n.props.style && n.props.style.width === 32);
-ok("...and larger toolbar buttons (24px -> 32px), three of them since 0.9.0", chromeBtns.length === 3, "buttons=" + chromeBtns.length);
+ok("...and larger toolbar buttons (24px -> 32px), four of them with the bookmarks",
+  chromeBtns.length === 4, "buttons=" + chromeBtns.length);
 ok("the dock toggle is gone on the curtain", !byTitle(t33, "移到左侧")[0] && !byTitle(t33, "移到右侧")[0]);
 ok("...so is the panel's collapse button", !byTitle(t33, "收起")[0]);
 ok("...and the resize strips do not apply here", !byTitle(t33, "拖拽调整宽度")[0] && !byTitle(t33, "拖拽调整高度")[0] && !byTitle(t33, "拖拽同时调整宽高")[0]);
@@ -4428,6 +4479,11 @@ let tp = render(propsFor(SNAP));
 byTitle(tp, "展开大纲")[0].props.onClick(); // the cards only exist while the panel is open
 tp = render(propsFor(SNAP));
 const rowArgs = (i, top) => ({ currentTarget: { style: {}, querySelector: () => null, getBoundingClientRect: () => ({ top: top === undefined ? 120 + i * 30 : top, left: 40, right: 300, width: 260, height: 22 }) } });
+// a row whose guide column we can observe: the handler looks the column up by selector
+const rowWithGuide = (i) => {
+  const gd = { style: { transform: "", background: "" } };
+  return { args: { currentTarget: { style: {}, querySelector: (sel) => (sel === "[data-dqt-guide]" ? gd : null), getBoundingClientRect: () => ({ top: 120 + i * 30, left: 40, right: 300, width: 260, height: 22 }) } }, gd };
+};
 const rowsAt = (t) => collect(t, (n) => n.props && n.props["data-jump-key"] && n.props.onMouseEnter);
 const hasClass = (n, c) => String((n && n.props && n.props.className) || "").split(/\s+/).includes(c);
 const allCards = (t) => collect(t, (n) => n.props && hasClass(n, "dqt-hover"));
@@ -4453,9 +4509,27 @@ rowsAt(tp)[0].props.onMouseEnter(rowArgs(0));
 tickTimeouts(); // the 260ms hover delay
 tp = render(propsFor(SNAP));
 ok("the hover card offers a pin button", !!pinOff(tp));
+ok("...an unpinned card keeps the ring empty", (() => {
+  const svg = pinOff(tp).props.children[0];
+  const kids = (svg.props.children || []).filter(Boolean);
+  return kids.length === 1 && !kids.some((c) => c.props && c.props.fill);
+})());
 pinOff(tp).props.onClick(noop);
 tp = render(propsFor(SNAP));
 ok("clicking the pin marks the card as pinned", !!pinOn(tp));
+// the pin's state is a RING WITH A CORE, drawn rather than typed: the ◉/○ glyphs
+// could only be one colour, and the filled core is where the theme colour belongs
+ok("...the pin's filled core takes the theme colour", (() => {
+  const svg = pinOn(tp).props.children[0];
+  const kids = svg.props.children || [];
+  const core = kids.find((c) => c && c.props && c.props.fill === "#4F8CFF");
+  return kids.length === 2 && !!core && kids.some((c) => c && c.props && c.props.stroke === "currentColor");
+})(), JSON.stringify((pinOn(tp).props.children[0].props.children || []).map((c) => c && c.props && c.props.fill)));
+// the card's reading side carries the accent bar, pinned or not: a shadow, so the
+// box does not shift and the corner radius still holds
+ok("the preview card carries a theme-coloured bar on its reading side",
+  String(pinnedEl(tp).props.style.boxShadow).startsWith("inset 2px 0 0 #4F8CFF"),
+  String(pinnedEl(tp).props.style.boxShadow).slice(0, 60));
 ok("...and the adopted card does not replay its entrance animation (no blink)",
   hasClass(pinnedEl(tp), "dqt-hover-static"), String(pinnedEl(tp).props.className));
 const pinnedTop = Number(pinnedEl(tp).props.style.top);
@@ -4463,6 +4537,17 @@ rowsAt(tp)[0].props.onMouseLeave(rowArgs(0));
 tickTimeouts(); // the hover card's own 240ms fade
 tp = render(propsFor(SNAP));
 ok("the pinned card survives the pointer leaving its row", cardsAt(tp).length === 1 && !!pinOn(tp), `${cardsAt(tp).length} cards`);
+
+// ---- the hierarchy guide takes the theme colour while its row is the one being read
+const guided = rowWithGuide(1);
+rowsAt(tp)[1].props.onMouseEnter(guided.args);
+ok("hovering a row paints its hierarchy guide in the theme colour",
+  guided.gd.style.background === "#4F8CFF" && guided.gd.style.transform === "translateX(-1px)",
+  JSON.stringify(guided.gd.style));
+rowsAt(tp)[1].props.onMouseLeave(guided.args);
+ok("...and leaves it neutral again when the pointer moves on",
+  guided.gd.style.background === "var(--dsw-alias-border-l2, rgba(128, 128, 128, 0.25))",
+  String(guided.gd.style.background));
 
 // ---- the second card, placed clear of the pinned one ----
 rowsAt(tp)[1].props.onMouseEnter(rowArgs(1));
