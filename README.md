@@ -4,6 +4,16 @@
 
 **DeepSeek Harness（DSH）对话大纲插件**：把 AI 回复中的 Markdown 标题（H1–H6）提取成可导航的大纲——侧边面板与全屏幕布两种视图，按对话回合分组、覆盖整段会话（含尚未加载进窗口的回合）。支持标题/提问/全文/跨会话四档检索、悬停预览、右键跳转与复制、书签与「只看书签」视图，六种主题色与半透明材质，阅读位置自动跟随并可记住。
 
+## 效果
+
+![侧边面板与悬停预览](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/preview.png)
+
+| 幕布（全宽视图） | 幕布右侧的书签栏 |
+| --- | --- |
+| ![幕布](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/curtain.png) | ![书签栏](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/bookmarks.png) |
+
+> 截图取自隔离环境里的实例，会话内容是用作演示的示例文案。
+
 ## 功能
 
 - **按回合分组** —— 每条用户消息 + 其后续 AI 回复为一组，组头显示回合时间与首行预览，点击跳到该回合模型回答的开头

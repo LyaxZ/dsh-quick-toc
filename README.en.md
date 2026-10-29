@@ -4,6 +4,16 @@
 
 A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (DSH): it turns the Markdown headings (H1–H6) of AI replies into a navigable outline — the same list as a side panel or as a full-width curtain — grouped by conversation turn and covering the whole session (including turns that are not loaded yet), with title/prompts/full-text/cross-session search, hover previews, a right-click menu for jumping and copying, bookmarks with a bookmarks-only view, six theme colours and a translucent material, and a reading position that both follows and is remembered.
 
+## Screenshots
+
+![The side panel with a hover preview](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/preview.png)
+
+| The curtain (full-width view) | Its bookmarks drawer |
+| --- | --- |
+| ![The curtain](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/curtain.png) | ![The bookmarks drawer](https://raw.githubusercontent.com/LyaxZ/dsh-quick-toc/main/assets/bookmarks.png) |
+
+> Captured from an isolated instance against a demo conversation.
+
 ## Features
 
 - **Turn-grouped outline** — each user message plus its following AI replies form one group; the group header shows the turn's time and a first-line preview, and clicking it jumps to the start of that turn's model reply
