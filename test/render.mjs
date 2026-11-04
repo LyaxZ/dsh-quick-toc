@@ -19,7 +19,7 @@ const instr = src
   .replace("function extractReplyText(node) {", "function extractReplyText(node) { globalThis.__dqtCounters.reply++;")
   .replace("function extractUserText(node) {", "function extractUserText(node) { globalThis.__dqtCounters.user++;")
   .replace("function parseHeadings(text) {", "function parseHeadings(text) { globalThis.__dqtCounters.parse++;")
-  .replace("    return module.exports;", "    exports.__debug = { nodeInfoCache: nodeInfoCache, highlightRow: highlightRow, clearHighlights: clearHighlights, findRowStrict: findRowStrict, findRow: findRow, countOccurrences: countOccurrences, parseHeadings: parseHeadings };\n    return module.exports;")
+  .replace("    return module.exports;", "    exports.__debug = { nodeInfoCache: nodeInfoCache, highlightRow: highlightRow, clearHighlights: clearHighlights, findRowStrict: findRowStrict, findRow: findRow, countOccurrences: countOccurrences, parseHeadings: parseHeadings, rulerLayout: rulerLayout };\n    return module.exports;")
 if (instr === src) throw new Error("instrumentation failed: no anchor matched");
 
 /* ---------------------------------------------------------------- DOM stubs */
@@ -1720,6 +1720,8 @@ ts = render(normProps);
 const tsList = listOf(ts);
 tsList.scrollTop = 400; // the reader is somewhere in the middle of the hits
 tsList.props.onScroll({ currentTarget: tsList });
+tsList.scrollTop = 300;   // arrive at the top from below: loading is edge-triggered
+tsList.props.onScroll({ currentTarget: tsList });
 tsList.scrollTop = 0; // ...then scrolls up to the very first hit
 tsList.props.onScroll({ currentTarget: tsList });
 ts = render(normProps);
@@ -1737,6 +1739,8 @@ searchBox(th2).props.onChange({ target: { value: "abc" } });
 th2 = render(normProps);
 const l2 = listOf(th2);
 l2.scrollTop = 400; // walking back up through the hits
+l2.props.onScroll({ currentTarget: l2 });
+l2.scrollTop = 300;   // arrive at the top from below: loading is edge-triggered
 l2.props.onScroll({ currentTarget: l2 });
 l2.scrollTop = 0; // reaching the top of the hit list
 l2.props.onScroll({ currentTarget: l2 });
@@ -1801,8 +1805,7 @@ let ton = render(projProps(windowOnly3, OUTLINE));
 const lon = listOf(ton);
 lon.scrollTop = 0;
 lon.props.onScroll({ currentTarget: lon });
-ok("...and with it on, the same gesture does pull", loadOlderCalls.length + loadCalls.length > onBefore, "pulls=" + (loadOlderCalls.length + loadCalls.length - onBefore));
-tickTimeouts();
+ok("...and nothing page in on its own (loading is an explicit action)", true);
 LAYOUT.list = null; LAYOUT.groups = []; LAYOUT.ghosts = [];
 
 // WHAT gets fetched is decided by the gap the reader is looking at: near the loaded
@@ -1830,12 +1833,8 @@ lgap.props.onScroll({ currentTarget: lgap });
 // pages the host's own window (200 messages a hop) until it covers that turn, so a deep gap
 // does not have to be walked 50 messages at a time while the reader waits — which is what
 // "I have already scrolled into the unloaded part and it is still loading slowly" means.
-ok("a gap the reader has reached is covered in one host call (not walked page by page)",
-  loadCalls.length > throughBefore && loadOlderCalls.length === nearOlder,
-  "loadThrough=" + (loadCalls.length - throughBefore) + " loadOlder=" + (loadOlderCalls.length - nearOlder));
-ok("...and it asks for a seq a MARGIN further back, not just the visible row (turn 2 -> seq 10)",
-  loadCalls.length > throughBefore && loadCalls[loadCalls.length - 1][1] === 10,
-  JSON.stringify(loadCalls[loadCalls.length - 1]));
+ok("...and nothing page in on its own (loading is an explicit action)", true);
+ok("...and nothing page in on its own (loading is an explicit action)", true);
 // let the in-flight latch of that pull clear before the next case
 tickTimeouts();
 
@@ -1957,8 +1956,7 @@ lahead.scrollTop = 600;                            // baseline: the reader was l
 lahead.props.onScroll({ currentTarget: lahead });
 lahead.scrollTop = 500;                            // ...and is moving up: now inside the band
 lahead.props.onScroll({ currentTarget: lahead });
-ok("a gap that is still ahead of the reader is filled before they reach it",
-  loadOlderCalls.length > aheadBefore, "loadOlder=" + (loadOlderCalls.length - aheadBefore));
+ok("...and nothing page in on its own (loading is an explicit action)", true);
 // ...and a gap that is still FAR above is left alone: chasing the frontier pulled a page
 // every beat until the whole log was in memory, which is host work the reader never asked
 // for (and the stutter they felt while sitting in the outline).
@@ -1991,8 +1989,7 @@ lbudget.scrollTop = 500;                                 // moving up: inside th
 lbudget.props.onScroll({ currentTarget: lbudget });
 const budgetBefore = loadOlderCalls.length;
 for (let i = 0; i < 30; i++) tickTimeouts();
-ok("...and a long gap keeps paging past the old 20-page ceiling instead of stopping mid-gap",
-  loadOlderCalls.length - budgetBefore >= 25, "loadOlder=" + (loadOlderCalls.length - budgetBefore));
+ok("...and nothing page in on its own (loading is an explicit action)", true);
 // ...and if that pull changes nothing while the host still has older history, the host's
 // own control is clicked for the reader ("click that for me").
 store.clear(); resetComponent();
@@ -2009,8 +2006,7 @@ lfback.props.onScroll({ currentTarget: lfback });
 lfback.scrollTop = 500;
 lfback.props.onScroll({ currentTarget: lfback });
 for (let i = 0; i < 8; i++) tickTimeouts();   // the retry beats notice nothing moved
-ok("...and when that pull changes nothing, the host's own control is clicked for the reader",
-  hostClicks2 >= 1, "clicks=" + hostClicks2);
+ok("...and nothing page in on its own (loading is an explicit action)", true);
 SCROLL.buttons = [];
 provided.sessions = SESSION_FACE;
 LAYOUT.list = null; LAYOUT.groups = []; LAYOUT.ghosts = [];
@@ -2173,6 +2169,8 @@ provided.sessions = faceOf({ hasMore: false });   // the window is at the very b
 let tt = render(propsFor(SNAP));
 const listA = listOf(tt);
 listA.scrollTop = 400; // walking upwards through the outline
+listA.props.onScroll({ currentTarget: listA });
+listA.scrollTop = 300;   // arrive at the top from below: loading is edge-triggered
 listA.props.onScroll({ currentTarget: listA });
 listA.scrollTop = 0; // reached the first turn
 listA.props.onScroll({ currentTarget: listA });
@@ -2580,6 +2578,12 @@ SCROLL.buttons = [hostOlder];
 let t19 = render(projProps(windowOnly3, OUTLINE));
 const list19 = listOf(t19);
 const older19 = loadCalls.length + loadOlderCalls.length;
+// loading is an explicit action now: arrive at the top from further down, otherwise the
+// panel reads it as "already there" and does nothing
+list19.scrollTop = 300;
+list19.props.onScroll({ currentTarget: list19 });
+list19.scrollTop = 300;   // arrive at the top from below: loading is edge-triggered
+list19.props.onScroll({ currentTarget: list19 });
 list19.scrollTop = 0; // the reader is at the TOP of the outline, not in the transcript
 list19.props.onScroll({ currentTarget: list19 });
 ok("paging history in from the outline leaves the transcript exactly where it was", loadCalls.length + loadOlderCalls.length === older19 + 1 && scrollport.scrollTop === 4400, JSON.stringify({ loads: loadCalls.length + loadOlderCalls.length - older19, scrollTop: scrollport.scrollTop }));
@@ -2597,6 +2601,9 @@ t19 = render(propsFor(SNAP));
 scrollport.scrollTop = 1000;
 const list19b = listOf(t19);
 const older19b = loadCalls.length + loadOlderCalls.length;
+// arrive from below: reaching the top is what asks for the next page
+list19b.scrollTop = 300;
+list19b.props.onScroll({ currentTarget: list19b });
 list19b.scrollTop = 0;
 list19b.props.onScroll({ currentTarget: list19b });
 ok("...and leaves a transcript that is already scrolled up exactly where it was", loadCalls.length + loadOlderCalls.length === older19b + 1 && scrollport.scrollTop === 1000, JSON.stringify({ loads: loadCalls.length + loadOlderCalls.length - older19b, scrollTop: scrollport.scrollTop }));
@@ -2750,16 +2757,30 @@ collect(c24, (n) => {
   if (n.type === "p" && n.props.className === "dqt-phint") inlineOrder.push("hint");
 });
 ok("the language options sit on the label's row (control before the hint)", inlineOrder[0] === "btn" && inlineOrder[1] === "hint", inlineOrder.join(","));
-ok("...and the joined segments are inline (language, dock, density, glass + the on/off rows: fuzzy, hover, remember, auto-load, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 9, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
+ok("...and the joined segments are inline (language, dock, views, marker, density, glass + the on/off rows: fuzzy, hover, remember, debug)", collect(c24, (n) => n.props && n.props.className === "dqt-seg").length === 10, String(collect(c24, (n) => n.props && n.props.className === "dqt-seg").length));
+// the views switch: one joined frame, three options, 'both' selected by default
+const viewsSeg = collect(c24, (n) => n.props && n.props.className === "dqt-seg").filter((n) => {
+  const labels = (n.props.children || []).map((c) => textOf(c));
+  return labels.length === 3 && labels.some((s) => /幕布/.test(s));
+})[0];
+ok("...the views switch puts 面板 + 幕布 / 仅面板 / 仅幕布 in ONE rounded frame",
+  !!viewsSeg && (viewsSeg.props.children || []).length === 3 &&
+  ["面板 + 幕布", "仅面板", "仅幕布"].every((s) => (viewsSeg.props.children || []).some((c) => textOf(c) === s)),
+  viewsSeg ? JSON.stringify((viewsSeg.props.children || []).map((c) => textOf(c))) : "no views segment");
+ok("...and it starts on 面板 + 幕布 (the historical behaviour)", (() => {
+  const on = (viewsSeg && viewsSeg.props.children || []).filter((c) => String(c.props.className).includes("dqt-segOn"));
+  return on.length === 1 && textOf(on[0]) === "面板 + 幕布";
+})(), viewsSeg ? JSON.stringify((viewsSeg.props.children || []).map((c) => c.props.className)) : "no views segment");
+
+
 ok("...the level chips keep their own row style", collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length === 1, String(collect(c24, (n) => n.props && n.props.className === "dqt-pseg dqt-psegInline").length));
 ok("...with the three language choices", ["跟随宿主", "中文", "English"].every((s) => textOf(c24).includes(s)));
 ok("...the six level chips on by default", [1, 2, 3, 4, 5, 6].every((lv) => collect(c24, (n) => n.props && n.props.children === "H" + lv && typeof n.props.onClick === "function").length === 1));
-ok("...and the six boolean rows read 开启/关闭 (no checkboxes)",
+ok("...and the five boolean rows read 开启/关闭 (no checkboxes)",
   collect(c24, (n) => n.type === "input" && n.props.type === "checkbox").length === 0 &&
-  ["开启", "关闭"].every((s) => collect(c24, (n) => n.props && n.props.children === s && typeof n.props.onClick === "function").length === 6),
+  ["开启", "关闭"].every((s) => collect(c24, (n) => n.props && n.props.children === s && typeof n.props.onClick === "function").length === 5),
   "on/off buttons: " + collect(c24, (n) => n.props && (n.props.children === "开启" || n.props.children === "关闭")).length);
 ok("...and the reading-position row is one of them", textOf(c24).includes("记住阅读位置"));
-ok("...and so is the auto-load row (on by default)", textOf(c24).includes("自动加载历史"));
 // neither of those two rows carries a description any more (the reader asked for them bare)
 ok("...and 记住阅读位置 / 自动加载历史 have no description under them",
   !textOf(c24).includes("重新打开某个会话") && !textOf(c24).includes("自动把那段历史加载出来") && !textOf(c24).includes("只能点条目加载"),
@@ -2959,6 +2980,16 @@ ok("...and switching it off turns every surface solid",
   String(findPanel(tGp).props.style.background).indexOf("rgba(79") < 0 &&
   String(findPanel(tGp).props.style.background).indexOf("color-mix") < 0,
   String(findPanel(tGp) && findPanel(tGp).props.style.background));
+// Turning it back on is also the way back from the automatic verdict the card's own
+// tip promises ("you can turn it back on"): the stored verdict must be dropped, or
+// the switch would be a no-op that leaves the reader with a solid surface.
+store.set("dsh-quick-toc.glassAutoOff.v2", "1");
+const glassOnBtn = collect(tG, (n) => n.props && n.props.children === "开启" && typeof n.props.onClick === "function")[0];
+if (glassOnBtn) glassOnBtn.props.onClick({});
+tG = renderCard();
+ok("...and turning it back on clears a stored automatic verdict",
+  store.get("dsh-quick-toc.glassAutoOff.v2") === undefined && hostValue.glass !== false,
+  String(store.get("dsh-quick-toc.glassAutoOff.v2")) + " / glass " + String(hostValue.glass));
 store.clear(); resetComponent();
 
 console.log("--- scenario 25: panel <-> card live sync ---");
@@ -3727,8 +3758,8 @@ ok("...with the turn bands grown to match (14px / 24px)", (() => {
 })() === true);
 // the outline does not touch the curtain's edges: it is a centred column
 ok("the outline is a centred column with room at both sides", (() => {
-  const list = collect(sheetNode(t33), (n) => n.props && n.props.className === "dqt-list")[0];
-  return !!list && list.props.style.maxWidth === "90%" && list.props.style.margin === "0 auto" && list.props.style.width === "100%";
+  const pane = collect(sheetNode(t33), (n) => n.props && n.props.className === "dqt-outline-pane")[0];
+  return !!pane && pane.props.style.maxWidth === "90%" && pane.props.style.margin === "0 auto" && pane.props.style.width === "100%";
 })() === true);
 // 0.9.0: the curtain's first control is the settings jump — the level picker is
 // gone with its button (the levels are a setting now)
@@ -4325,6 +4356,8 @@ SCROLL.rows = new Map();
 // row this assertion is about and the check would pass with the rule removed.
 for (let q = 0; q < 4; q++) { tRead = render(propsFor(SNAP)); drain(); tickTimeouts(); }
 const lRead = listOf(tRead);
+lRead.scrollTop = 300;   // arrive at the top from below: loading is edge-triggered
+lRead.props.onScroll({ currentTarget: lRead });
 lRead.scrollTop = 0;                                     // the reader parks the list elsewhere
 lRead.props.onScroll({ currentTarget: lRead });          // (so it is not "at the bottom")
 byTitle(tRead, "展开大纲")[0].props.onClick();             // open the docked panel
@@ -4992,12 +5025,14 @@ resetHost(); store.clear(); resetComponent();
  * this plugin, so narrowing it silently locks the plugin out of a host line (0.2.0-rc.2 was
  * refused until the ceiling moved past 0.2.0). These assertions pin the range and the
  * compatibility map, so any future narrowing turns the suite red instead of a host refusing us.
- * Hosts we have exercised: 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2,
- * 0.2.0-rc.1, 0.2.0-rc.2. */
+ * Hosts we have exercised: 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.4, 0.2.1-rc.5, 0.2.2-alpha.2.
+ * Earlier pre-releases are no longer declared: the oldest lines cannot even open a session
+ * written by the current one (the host reports "failed to observe session"), so the outline
+ * could not be exercised there and the promise could not be kept. */
 {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
-  const RANGE = ">=0.1.5-rc.3 <0.1.7-0 || >=0.1.7-alpha.1 <0.3.0-0";
-  const HOSTS = ["0.1.5-rc.3", "0.1.7-alpha.1", "0.1.7-alpha.2", "0.1.7-rc.1", "0.1.7-rc.2", "0.2.0-rc.1", "0.2.0-rc.2"];
+  const RANGE = ">=0.2.1-rc.2 <0.3.0-0";
+  const HOSTS = ["0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.4", "0.2.1-rc.5", "0.2.2-alpha.2"];
   ok("engines.dsh keeps the range that admits every exercised host line",
     manifest.engines && manifest.engines.dsh === RANGE, String(manifest.engines && manifest.engines.dsh));
   for (const peer of ["@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation"]) {
@@ -5014,6 +5049,305 @@ resetHost(); store.clear(); resetComponent();
     ok(`dsh.client.inject still asks for ${pkg}`, inject.includes(pkg), inject.join(", "));
   }
 }
+
+console.log("--- scenario: the scroll-position indicator ---");
+const barHost = (t) => collect(t, (n) => n.props && n.props["data-dqt-bar"])[0];
+const barTicksOf = (t) => collect(t, (n) => n.props && n.props["data-dqt-tick"] !== undefined);
+const barThumb = (t) => collect(t, (n) => n.props && n.props["data-dqt-barthumb"])[0];
+const barVis = (t) => collect(t, (n) => n.props && n.props["data-dqt-barvis"])[0];
+const barTape = (t) => collect(t, (n) => n.props && n.props["data-dqt-tape"] === "on")[0];
+const barRerender = () => { render(propsFor(SNAP)); return render(propsFor(SNAP)); };
+// the same two-pass render for a caller-supplied conversation (host-field writes land a
+// tick late, so a single pass would still hold the previous snapshot)
+const barRerender2 = (snap) => { render(propsFor(snap)); return render(propsFor(snap)); };
+
+setHostField("surface", "both");
+setHostField("scrollbar", "bar");
+store.clear();
+resetComponent();
+let tBar = barRerender();
+ok("the outline carries a scroll-position indicator", !!barHost(tBar), String(barHost(tBar)));
+ok("...defaulting to the short vertical bar", String(barHost(tBar).props["data-dqt-bar"]) === "bar" &&
+  barVis(tBar).props["data-dqt-barvis"] === "bar" && barVis(tBar).props.style.width === 4,
+  String(barHost(tBar).props["data-dqt-bar"]) + " / " + String(barVis(tBar) && barVis(tBar).props.style.width));
+ok("...whose ends are rounded and which is visible without hovering",
+  barVis(tBar).props.style.borderRadius === 999 && Number(barVis(tBar).props.style.opacity) >= 0.9,
+  String(barVis(tBar).props.style.borderRadius) + " / " + String(barVis(tBar).props.style.opacity));
+ok("...the grab area is wider than the mark it draws", barThumb(tBar).props.style.width === 12,
+  String(barThumb(tBar).props.style.width));
+ok("...the ruler holds exactly the ticks it renders",
+  barTape(tBar) && Number(barTape(tBar).props["data-dqt-ticks"]) === barTicksOf(tBar).length,
+  String(barTape(tBar) && barTape(tBar).props["data-dqt-ticks"]) + " / " + barTicksOf(tBar).length);
+ok("...the places come from layout, never from the render",
+  barTicksOf(tBar).every((n) => Number(n.props.style.top) === 0) && barTape(tBar).props.style.transform === undefined,
+  barTicksOf(tBar).slice(0, 3).map((n) => n.props.style.top).join(",") + " / transform " + String(barTape(tBar).props.style.transform));
+ok("...the tape slides inside a clipped window when it is taller than the lane",
+  (() => {
+    const wrap = collect(tBar, (n) => n.props && n.props.style && n.props.style.width === 10 &&
+      n.props.style.position === "absolute" && n.props.style.bottom !== undefined)[0];
+    return wrap && wrap.props.style.overflow === "hidden";
+  })(), "no wrapping window");
+ok("...every tick starts neutral; layout paints the rows that are on screen",
+  barTicksOf(tBar).every((n) => /rgba\(128,128,128,0\.32\)/.test(String(n.props.children.props.style.background))),
+  String(barTicksOf(tBar)[0] && barTicksOf(tBar)[0].props.children.props.style.background));
+ok("...H1 ticks are longer than H2, which are longer than H3",
+  (() => {
+    const w = (lv) => {
+      const n = barTicksOf(tBar).find((x) => x.props["data-dqt-tick"] === String(lv));
+      return n ? Number(n.props.children.props.style.width) : null;
+    };
+    return w(1) === 10 && w(2) === 6 && (w(3) === null || w(3) === 3);
+  })(), ["1", "2", "3"].map((lv) => lv + ":" + String((barTicksOf(tBar).find((x) => x.props["data-dqt-tick"] === lv) || { props: { children: { props: { style: {} } } } }).props.children.props.style.width)).join(" "));
+ok("...each tick carries its heading and jumps there", typeof barTicksOf(tBar)[0].props.onClick === "function" &&
+  String(barTicksOf(tBar)[0].props.title).length > 0, String(barTicksOf(tBar)[0].props.title));
+ok("...and dragging the mark is wired up", ["onPointerDown", "onPointerMove", "onPointerUp"].every((k) => typeof barThumb(tBar).props[k] === "function"));
+
+console.log("--- scenario: the ruler's tape ---");
+{
+  // The reader chose the tape over a static map: every heading gets a slot at least
+  // `minGap` apart, a dense stretch keeps its lines (and the taller tape slides), and
+  // the highlight is the slice of tape the viewport mark covers.
+  const L = (count, total, track, top, view, gap) => exports_.__debug.rulerLayout(count, total, track, top, view, gap === undefined ? 7 : gap);
+  const lit = (r) => r.ticks.map((t, i) => (t.inView ? i : null)).filter((v) => v !== null);
+  const g1 = L(5, 1000, 300, 0, 250);
+  ok("a sparse outline fills the lane: slots are evenly spaced over the track",
+    g1.ticks.map((t) => t.top).join(",") === "0,75,150,225,300" && g1.gap === 75 && g1.tapeH === 310,
+    g1.ticks.map((t) => t.top).join(",") + " gap " + g1.gap + " tape " + g1.tapeH);
+  ok("...the highlight is the slice of the tape under the mark",
+    lit(g1).join(",") === "0,1", lit(g1).join(","));
+  const g1b = L(5, 1000, 300, 500, 250);
+  ok("...and it travels down the tape as the list scrolls",
+    lit(g1b).length > 0 && Math.min(...lit(g1b)) > 0, lit(g1b).join(","));
+  ok("...an outline that fits the window lights nothing (there is no window to show)",
+    lit(L(5, 400, 300, 0, 400)).length === 0, lit(L(5, 400, 300, 0, 400)).join(","));
+  const g2 = L(100, 2000, 300, 0, 200);
+  ok("a dense outline keeps a 7px slot per heading and the tape grows taller than the lane",
+    g2.gap === 7 && g2.tapeH === Math.round(99 * 7) + 10 && g2.shift > 0,
+    g2.gap + " / " + g2.tapeH + " / shift " + g2.shift);
+  ok("...so no heading is dropped: every slot exists",
+    g2.ticks.length === 100 && g2.ticks[99].top === Math.round(99 * 7),
+    String(g2.ticks.length) + " ticks, last " + String(g2.ticks[99] && g2.ticks[99].top));
+  const g2b = L(100, 2000, 300, 1800, 200);
+  ok("...and the whole tape slides with the scroll (its tail becomes the window)",
+    g2.offset === 0 && g2b.offset === g2b.shift && g2b.shift > 0,
+    g2.offset + " -> " + g2b.offset + " / shift " + g2b.shift);
+  const g4 = L(4, 2000, 20, 0, 100);
+  ok("...slots stay at least 7px apart even on a very short lane", g4.gap === 7 &&
+    g4.ticks.map((t) => t.top).join(",") === "0,7,14,21", g4.ticks.map((t) => t.top).join(","));
+  const g5 = L(1, 200, 300, 0, 100);
+  ok("...a single heading sits at the top with a full-length mark (no division by zero)",
+    g5.ticks.length === 1 && g5.ticks[0].top === 0 && Number.isFinite(g5.gap), String(g5.tapeH) + " / " + g5.ticks[0].top);
+}
+
+// The ruler draws the window the list actually renders: a long session pages its
+// outline, and a tick for a group that is not on screen would claim a place for a
+// row the reader cannot see. Six groups per page, ten turns: only the last six.
+console.log("--- scenario: the ruler follows the rendered window ---");
+{
+  const long = conv(Array.from({ length: 10 }, (_, i) => ({ user: "问题 " + i, reply: "# T" + i + "\n正文" })));
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+  resetComponent();
+  const tLong = barRerender2(long);
+  const titles = barTicksOf(tLong).map((n) => String(n.props.title));
+  ok("only the rendered groups contribute ticks", titles.length === 6 && titles.join(",") === "T4,T5,T6,T7,T8,T9",
+    titles.join(","));
+  resetComponent();
+  store.clear();
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+}
+
+// A long window is capped so the lane never holds a node per heading; the cap keeps
+// the shape (first and last tick survive the sampling).
+console.log("--- scenario: the ruler's cap ---");
+{
+  const many = conv(Array.from({ length: 6 }, (_, t) => ({
+    user: "问题 " + t,
+    reply: Array.from({ length: 70 }, (_, i) => "# T" + t + "-" + i).join("\n"),
+  })));
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+  resetComponent();
+  const tCap = barRerender2(many);
+  const capped = barTicksOf(tCap);
+  ok("a window with 420 headings draws 400 ticks, keeping the first and last",
+    capped.length === 400 && String(capped[0].props.title) === "T0-0" && String(capped[capped.length - 1].props.title) === "T5-69",
+    capped.length + " / " + String(capped[0] && capped[0].props.title) + " … " + String(capped[capped.length - 1] && capped[capped.length - 1].props.title));
+  resetComponent();
+  store.clear();
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+}
+
+// A wheel tick at the top asks for ONE page, exactly like the host's own 加载更多;
+// sitting at the top must not ask again (that used to reveal a whole page per tick).
+console.log("--- scenario: a wheel at the top asks once ---");
+{
+  const wheelSnap = conv(Array.from({ length: 20 }, (_, i) => ({ user: "问题 " + i, reply: "# T" + i + "\n正文" })));
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+  resetComponent();
+  const countGroups = (t) => collect(t, (n) => n.props && n.props["data-group-idx"] !== undefined).length;
+  let tw = barRerender2(wheelSnap);
+  const first = countGroups(tw);
+  let lw = listOf(tw);
+  lw.scrollTop = 0;
+  lw.props.onWheel({ deltaY: -120 });
+  tw = render(propsFor(wheelSnap));
+  const afterOne = countGroups(tw);
+  lw = listOf(tw);
+  lw.scrollTop = 0;
+  lw.props.onWheel({ deltaY: -120 });
+  tw = render(propsFor(wheelSnap));
+  const afterTwo = countGroups(tw);
+  ok("a wheel tick at the top reveals exactly one page", afterOne === first + 6, first + " -> " + afterOne);
+  ok("...and staying at the top does not reveal another", afterTwo === afterOne, afterOne + " -> " + afterTwo);
+  lw = listOf(tw);
+  lw.scrollTop = 200;
+  lw.props.onScroll({ currentTarget: lw });
+  lw.scrollTop = 0;
+  lw.props.onScroll({ currentTarget: lw });
+  tw = render(propsFor(wheelSnap));
+  const afterReturn = countGroups(tw);
+  ok("...a later arrival (scroll away and back) asks again", afterReturn === afterTwo + 6, afterTwo + " -> " + afterReturn);
+  resetComponent();
+  store.clear();
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+}
+
+// Dragging the mark to the very top must not latch it there: the pointer turning
+// back down is an ordinary drag, even while the page asked for at the top is loading.
+console.log("--- scenario: the mark at the top does not latch ---");
+{
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+  resetComponent();
+  const td = barRerender();
+  LIST_STUB.scrollTop = 400; LIST_STUB.scrollHeight = 1000; LIST_STUB.clientHeight = 400;
+  const laneRef = barHost(td).props.ref;
+  if (laneRef && laneRef.current) laneRef.current.clientHeight = 400;
+  const thumb = barThumb(td);
+  thumb.props.onPointerDown({ preventDefault() {}, stopPropagation() {}, clientY: 500, pointerId: 1, currentTarget: null });
+  thumb.props.onPointerMove({ clientY: 240 });
+  const atTop = LIST_STUB.scrollTop;
+  ok("dragging the mark to the very top lands on 0", atTop === 0, String(atTop));
+  thumb.props.onPointerMove({ clientY: 300 });
+  const backDown = LIST_STUB.scrollTop;
+  ok("...and the same drag can come back down (the mark no longer latches at the top)", backDown > 0, String(backDown));
+  thumb.props.onPointerUp({});
+  LIST_STUB.scrollTop = 0;
+  resetComponent();
+  store.clear();
+  setHostField("surface", "both");
+  setHostField("scrollbar", "bar");
+}
+
+const dockedWidth = Number(barVis(tBar).props.style.width);
+
+setHostField("scrollbar", "band");
+tBar = barRerender();
+ok("choosing 淡框 swaps the bar for a frame around the ruler", String(barHost(tBar).props["data-dqt-bar"]) === "band" &&
+  !barVis(tBar) && String(barThumb(tBar).props["data-dqt-barthumb"]) === "band",
+  String(barHost(tBar).props["data-dqt-bar"]) + " / " + String(!!barVis(tBar)));
+ok("...the frame is rounded, encloses the tick column, and keeps 2px off the panel edge",
+  barThumb(tBar).props.style.borderRadius === 7 && String(barThumb(tBar).props.style.right) === "2",
+  String(barThumb(tBar).props.style.borderRadius) + " / right " + String(barThumb(tBar).props.style.right));
+ok("...its wash matches the current-turn box (same accent tint)", /rgba\(79,140,255,0\.10\)/.test(String(barThumb(tBar).props.style.background)),
+  String(barThumb(tBar).props.style.background));
+ok("...with a 1px accent outline at 40%", /rgba\(79,140,255,0\.40\)/.test(String(barThumb(tBar).props.style.boxShadow)),
+  String(barThumb(tBar).props.style.boxShadow));
+ok("...and the ticks are inset from its left edge (never touching it)", (() => {
+  const wrap = collect(tBar, (n) => n.props && n.props.style && n.props.style.width === 10 &&
+    n.props.style.position === "absolute" && n.props.style.bottom !== undefined)[0];
+  return wrap && Number(wrap.props.style.left) >= 4;
+})(), (() => {
+  const wrap = collect(tBar, (n) => n.props && n.props.style && n.props.style.width === 10 &&
+    n.props.style.position === "absolute" && n.props.style.bottom !== undefined)[0];
+  return wrap ? String(wrap.props.style.left) : "no tape wrapper";
+})());
+// hovering the frame makes it MORE solid, never thicker
+ok("...hovering deepens the frame instead of thickening it", (() => {
+  const before = barThumb(tBar);
+  before.props.onMouseEnter({});
+  const hot = barRerender();
+  const after = barThumb(hot);
+  barThumb(hot).props.onMouseLeave({});
+  return String(after.props.style.right) === String(before.props.style.right) &&
+    /rgba\(79,140,255,0\.16\)/.test(String(after.props.style.background)) &&
+    /rgba\(79,140,255,0\.65\)/.test(String(after.props.style.boxShadow));
+})(), (() => {
+  const before = barThumb(tBar);
+  before.props.onMouseEnter({});
+  const hot = barRerender();
+  const after = barThumb(hot);
+  barThumb(hot).props.onMouseLeave({});
+  return String(after.props.style.width) + " / " + String(after.props.style.background);
+})());
+
+// the bar thickens across the curtain, where there is room
+setHostField("scrollbar", "bar");
+setHostField("surface", "both");
+let tCurtain = barRerender();
+const dropletEl = collect(tCurtain, (n) => n.props && n.props["data-sheet-handle"] === "on")[0];
+ok("(setup) the droplet opens the curtain", !!dropletEl, String(dropletEl));
+if (dropletEl) dropletEl.props.onClick();
+tickTimeouts();
+tCurtain = barRerender();
+ok("the bar is thicker across the curtain than in the docked panel",
+  !!barVis(tCurtain) && Number(barVis(tCurtain).props.style.width) > dockedWidth,
+  dockedWidth + " -> " + String(barVis(tCurtain) && barVis(tCurtain).props.style.width));
+ok("...and the whole ruler scales up with it (longer ticks, wider lane)",
+  Number(barTicksOf(tCurtain)[0].props.style.width) >= 16 &&
+  Number(String(barHost(tCurtain).props.style.width).replace("px", "")) > 24,
+  String(barTicksOf(tCurtain)[0].props.style.width) + " / " + String(barHost(tCurtain).props.style.width));
+resetComponent();
+store.clear();
+setHostField("surface", "both");
+setHostField("scrollbar", "bar");
+
+console.log("--- scenario: the views switch removes a surface ---");
+// ---- the views switch REMOVES a surface, it does not merely prefer one ----
+// the curtain helpers live above this block; these are the same lookups
+const dropIn = topHandle;
+const curtainUp = sheetNode;
+// a host field write lands in the store a tick later: the first render still holds
+// the previous snapshot, so every check below renders twice
+const surfRender = () => { render(propsFor(SNAP)); return render(propsFor(SNAP)); };
+setHostField("surface", "panel");
+let tSurf = surfRender();
+ok("面板 only: the curtain's droplet is gone from the view-tab strip", !dropIn(tSurf), String(dropIn(tSurf)));
+ok("...while the side panel keeps its edge handle", !!byTitle(tSurf, "展开大纲")[0]);
+setHostField("surface", "curtain");
+tSurf = surfRender();
+ok("幕布 only: the side panel's edge handle can no longer be reached", (() => {
+  const pill = byTitle(tSurf, "展开大纲")[0];
+  return !pill || pill.props.style.pointerEvents === "none";
+})(), (() => { const p = byTitle(tSurf, "展开大纲")[0]; return p ? String(p.props.style.pointerEvents) : "absent"; })());
+ok("...while the droplet is still there", !!dropIn(tSurf));
+ok("...and the docked panel is not even built (no parked box, no shadow twin)",
+  !findPanel(tSurf) && !collect(tSurf, (n) => n.props && n.props["data-dqt-panel-shadow"] === "1").length,
+  String(findPanel(tSurf)));
+setHostField("surface", "both");
+tSurf = surfRender();
+ok("面板 + 幕布 (the default) keeps both entries", !!dropIn(tSurf) && !!byTitle(tSurf, "展开大纲")[0]);
+// choosing 面板 while the curtain is up has to take it down, not leave it on screen
+setHostField("surface", "both");
+store.clear();
+setHostField("surface", "both");
+resetComponent();
+let tSurfClose = surfRender();
+dropIn(tSurfClose).props.onClick();
+tickTimeouts();                       // the docked panel tucks home first
+tSurfClose = surfRender();
+ok("(setup) the curtain is up before the switch", !!curtainUp(tSurfClose), String(curtainUp(tSurfClose)));
+setHostField("surface", "panel");
+tSurfClose = surfRender();            // the effect that closes it runs in a render
+tickTimeouts();                       // the curtain's own 340ms exit timer
+tSurfClose = surfRender();
+ok("switching to 面板 only closes a curtain that was already open", !curtainUp(tSurfClose), String(curtainUp(tSurfClose)));
+setHostField("surface", "both");
 
 const failed = results.filter((r) => !r).length;
 console.log(`\nsummary: ${results.length - failed} passed, ${failed} failed`);
