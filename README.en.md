@@ -54,7 +54,7 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 
 | Plugin | Supported DSH |
 | --- | --- |
-| **0.10.x** (latest, 0.10.3) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2, 0.2.1-alpha.1, 0.2.1-alpha.2, 0.2.1-alpha.3, 0.2.1-alpha.4, 0.2.1-alpha.5, 0.2.1-rc.1, 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.4, 0.2.2-alpha.2 |
+| **0.10.x** (latest, 0.10.4) | 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.4, 0.2.1-rc.5, 0.2.2-alpha.2 |
 | **0.9.x** (0.9.5) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2, 0.2.1-alpha.1, 0.2.1-alpha.2, 0.2.1-alpha.3, 0.2.1-alpha.4, 0.2.1-alpha.5 |
 | 0.8.x (0.8.2) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
 | 0.7.x (0.7.14) | 0.1.5-rc.3, 0.1.7-alpha.1, 0.1.7-alpha.2, 0.1.7-rc.1, 0.1.7-rc.2, 0.2.0-rc.1, 0.2.0-rc.2 |
@@ -65,6 +65,8 @@ A conversation TOC plugin for [DeepSeek Harness](https://github.com/deepseek-ai/
 | 0.2.x (0.2.2) | = 0.1.2-rc.1 |
 
 Each major line lists only its newest patch (the defects a new feature introduces are fixed in the patches that follow, so within one major line the newest patch is the one to use; older patches keep working — the plugin does not break existing interfaces).
+
+From 0.10.4 the declared floor is 0.2.1-rc.2: earlier pre-releases are no longer supported — they can no longer open a session written by the current line, so the plugin's behaviour there cannot be verified.
 
 ## Install
 

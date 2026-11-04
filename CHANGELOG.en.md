@@ -2,6 +2,23 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.10.4] - 2026-11-04
+
+### Added
+- **Choice of views**: a new "Views" setting switches between panel + curtain, panel only and curtain only; with "curtain only" the docked panel is no longer built.
+- **Position indicator**: a column of ticks and a slider on the right of the outline shows how far into the conversation you are; the style is either a bar or a soft band, and clicking a tick jumps to that section.
+
+### Changed
+- **The declared host range now starts at 0.2.1-rc.2**: earlier prereleases are no longer listed as supported.
+- **In the curtain the outline and the position indicator travel as one column**: the column is centred and moves with the search and bookmark sidebars, so the indicator stays beside the outline.
+- **The "auto-load history" setting is gone**: history loads one page each time you reach the top, with no switch.
+- **Reaching the top loads one page per arrival**: the wheel and the slider follow the same rule, matching the host's own "load earlier".
+
+### Fixed
+- **Translucency stayed off for good on a slow device**: after it has been switched off automatically, turning the switch back on now takes effect.
+- **Dragging the slider to the top left it stuck there**: it can be dragged back down again.
+- **Unloaded rows appeared while scrolling up**: a page no longer leaves placeholder rows behind.
+
 ## [0.10.3] - 2026-10-28
 
 ### Changed
