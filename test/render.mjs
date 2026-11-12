@@ -5026,13 +5026,13 @@ resetHost(); store.clear(); resetComponent();
  * refused until the ceiling moved past 0.2.0). These assertions pin the range and the
  * compatibility map, so any future narrowing turns the suite red instead of a host refusing us.
  * Hosts we have exercised: 0.2.1-rc.2, 0.2.1-rc.3, 0.2.1-rc.4, 0.2.1-rc.5, 0.2.2-alpha.2,
- * 0.2.2-rc.1. Earlier pre-releases are no longer declared: the oldest lines cannot even open a
+ * 0.2.2-rc.1, 0.2.2-rc.2. Earlier pre-releases are no longer declared: the oldest lines cannot even open a
  * session written by the current one (the host reports "failed to observe session"), so the
  * outline could not be exercised there and the promise could not be kept. */
 {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
   const RANGE = ">=0.2.1-rc.2 <0.3.0-0";
-  const HOSTS = ["0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.4", "0.2.1-rc.5", "0.2.2-alpha.2", "0.2.2-rc.1"];
+  const HOSTS = ["0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.4", "0.2.1-rc.5", "0.2.2-alpha.2", "0.2.2-rc.1", "0.2.2-rc.2"];
   ok("engines.dsh keeps the range that admits every exercised host line",
     manifest.engines && manifest.engines.dsh === RANGE, String(manifest.engines && manifest.engines.dsh));
   for (const peer of ["@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation"]) {

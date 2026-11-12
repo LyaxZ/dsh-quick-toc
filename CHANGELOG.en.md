@@ -2,6 +2,11 @@
 
 All notable changes to **dsh-quick-toc** are documented here. Chinese version: [CHANGELOG.md](CHANGELOG.md).
 
+## [0.10.6] - 2026-11-12
+
+### Changed
+- **Supports DSH 0.2.2-rc.2**: no plugin code changed; the compatibility declaration registers this prerelease, verified in an isolated environment.
+
 ## [0.10.5] - 2026-11-05
 
 ### Changed
