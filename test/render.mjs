@@ -5032,7 +5032,7 @@ resetHost(); store.clear(); resetComponent();
 {
   const manifest = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
   const RANGE = ">=0.2.1-rc.2 <0.3.0-0";
-  const HOSTS = ["0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.4", "0.2.1-rc.5", "0.2.2-alpha.2", "0.2.2-rc.1", "0.2.2-rc.2", "0.2.2-rc.3", "0.2.2-rc.4"];
+  const HOSTS = ["0.2.1-rc.2", "0.2.1-rc.3", "0.2.1-rc.4", "0.2.1-rc.5", "0.2.2-alpha.2", "0.2.2-rc.1", "0.2.2-rc.2", "0.2.2-rc.3", "0.2.2-rc.4", "0.2.2-rc.5"];
   ok("engines.dsh keeps the range that admits every exercised host line",
     manifest.engines && manifest.engines.dsh === RANGE, String(manifest.engines && manifest.engines.dsh));
   for (const peer of ["@deepseek-ai/dsh-client-ui-chat", "@deepseek-ai/dsh-client-ui-conversation"]) {
